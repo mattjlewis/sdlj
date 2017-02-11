@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.diozero.sdlj</groupId>
+	<artifactId>sdlj-java</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<java.version>8</java.version>
+		<jdk.source.version>1.${java.version}</jdk.source.version>
+		<jdk.target.version>1.${java.version}</jdk.target.version>
+		<maven.compiler.source>${jdk.source.version}</maven.compiler.source>
+		<maven.compiler.target>${jdk.target.version}</maven.compiler.target>
+		
+		<maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
+		<tinylog.version>1.1</tinylog.version>
+	</properties>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+				<configuration>
+					<debug>false</debug>
+					<optimize>true</optimize>
+					<showDeprecation>true</showDeprecation>
+					<showWarnings>true</showWarnings>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
+	<dependencies>
+		<dependency>
+			<groupId>org.tinylog</groupId>
+			<artifactId>tinylog</artifactId>
+			<version>${tinylog.version}</version>
+		</dependency>
+	</dependencies>
+</project>
