@@ -9,14 +9,15 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<java.version>8</java.version>
-		<jdk.source.version>1.${java.version}</jdk.source.version>
-		<jdk.target.version>1.${java.version}</jdk.target.version>
-		<maven.compiler.source>${jdk.source.version}</maven.compiler.source>
-		<maven.compiler.target>${jdk.target.version}</maven.compiler.target>
+		<!-- Java version -->
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.release>8</maven.compiler.release>
 		
-		<maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
-		<tinylog.version>1.1</tinylog.version>
+		<!-- Maven plugins -->
+		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+
+		<!-- Libraries -->
+		<tinylog.version>2.3.2</tinylog.version>
 	</properties>
 	
 	<build>
@@ -37,7 +38,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.tinylog</groupId>
-			<artifactId>tinylog</artifactId>
+			<artifactId>tinylog-api</artifactId>
+			<version>${tinylog.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.tinylog</groupId>
+			<artifactId>tinylog-impl</artifactId>
 			<version>${tinylog.version}</version>
 		</dependency>
 	</dependencies>
