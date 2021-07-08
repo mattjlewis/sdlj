@@ -1,49 +1,71 @@
 # Makefile:
-#	libsdljoystick - Java (JNI) library wrapper of SDL Joystick for the Raspberry Pi
+# libsdljoystick - Java (JNI) library wrapper of SDL Joystick for the Raspberry Pi
 #
 
-APPTARGET=sdljoysticktest
-LIBTARGET=libsdljoystick.so
+RM           := rm -f
+CC           := $(CROSS_PREFIX)gcc
+AR           := $(CROSS_PREFIX)ar
+SIZE         := $(CROSS_PREFIX)size
+STRIP        := $(CROSS_PREFIX)strip
+SHLIB        := $(CC) -shared
+STRIP_FLAGS  :=
 
-CC	         = gcc
-INCLUDE	     = -I. \
-               -I/$(JAVA_HOME)/include                         \
-               -I/$(JAVA_HOME)/include/linux                   \
-               -I/usr/local/include -I/usr/local/include/linux -I/usr/include/SDL2
+LIB_NAME := sdljoystick
+SRCS     := com_diozero_sdl_joystick_JoystickNative.c sdljoysticktest.c
+LDLIBS   := -lSDL2 -lpthread
 
-CFLAGS      = -O3 -Wall -pthread -fPIC $(INCLUDE)
-LDFLAGS =
+ifeq ($(OS),Windows_NT)
+    uname_S := Windows
+else
+    uname_S := $(shell uname -s)
+endif
 
-LIBS         = -lSDL2 -lrt -lpthread
+ifeq ($(uname_S), Windows)
+    OS_JAVA_INC := win32
+    APP_EXT := .exe
+    LIB_EXT := .dll
+endif
+ifeq ($(uname_S), Linux)
+    OS_JAVA_INC := linux
+    LIB_EXT  := .so
+    STRIP_FLAGS += --strip-unneeded
+endif
+ifeq ($(uname_S), Darwin)
+    OS_JAVA_INC := darwin
+    LIB_EXT  := .dylib
+    STRIP_FLAGS += -x
+endif
 
-# Should not alter anything below this line
-###############################################################################
+override CFLAGS := -O3 -Wall -pthread -fPIC $(CFLAGS)
 
-SRC	=   com_diozero_sdl_joystick_JoystickNative.c sdljoysticktest.c
+INCLUDES   := -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/$(OS_JAVA_INC) -I$(SDL2_BASE_DIR)/include/SDL2
+LIB_PREFIX ?= lib
+APP_TARGET := $(APP_NAME)$(APP_EXT)
+LIB_TARGET := $(LIB_PREFIX)$(LIB_NAME)$(LIB_EXT)
+LDFLAGS    ?=
+OBJS       := $(SRCS:.c=.o)
 
-OBJ =	$(SRC:.c=.o)
+all: $(LIB_TARGET) $(APP_TARGET)
 
-all:	$(LIBTARGET) $(APPTARGET)
-#all:	$(LIBTARGET)
+$(LIB_TARGET): $(OBJS)
+	@echo [LINK] $(LIB_TARGET)
+	@$(SHLIB) -o $(LIB_TARGET) $(OBJS) $(LDFLAGS) $(LDLIBS)
+	@$(STRIP) $(STRIP_FLAGS) $(LIB_TARGET)
 
-$(LIBTARGET):	$(OBJ)
-	@echo [LINK] $(LIBTARGET)
-	@$(CC) $(OBJ) -shared -o $(LIBTARGET) $(LIBS)
-
-$(APPTARGET): $(OBJ)
-	@echo [BUILD] $(APPTARGET)
-	@$(CC) -o $(APPTARGET) $(OBJ) $(LDFALGS) $(LIBS)
+$(APP_TARGET): $(OBJS)
+	@echo [BUILD] $(APP_TARGET)
+	@$(CC) -o $(APP_TARGET) $(OBJS) $(LDFLAGS) $(LDLIBS)
 
 .c.o:
 	@echo [COMPILE] $<
-	@$(CC) -c $(CFLAGS) $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 clean:
-	rm -f $(OBJ) $(TARGET) *~ core tags Makefile.bak
+	$(RM) -f $(OBJS) $(TARGET) *~ core tags Makefile.bak
 
-tags:	$(SRC)
+tags: $(SRCS)
 	@echo [ctags]
-	@ctags $(SRC)
+	@ctags $(SRCS)
 
 depend:
-	makedepend -Y $(SRC)
+	makedepend -Y $(SRCS)

@@ -2,7 +2,7 @@ package com.diozero.sdl.joystick;
 
 import org.tinylog.Logger;
 
-public class Joystick extends JoystickInfo {
+public class Joystick extends JoystickInfo implements AutoCloseable {
 	private int numAxes;
 	private int numBalls;
 	private int numButtons;
@@ -67,6 +67,7 @@ public class Joystick extends JoystickInfo {
 		}
 	}
 
+	@Override
 	public void close() {
 		JoystickNative.closeJoystick(this);
 	}

@@ -162,6 +162,7 @@ JNIEXPORT void JNICALL Java_com_diozero_sdl_joystick_JoystickNative_closeJoystic
 	if (SDL_JoystickGetAttached(joystick) == SDL_TRUE) {
 		SDL_JoystickClose(joystick);
 	}
+	joystick_stickdata[id] = NULL;
 }
 
 JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_getAxisValue(JNIEnv* env, jclass clz, int id, int axis) {

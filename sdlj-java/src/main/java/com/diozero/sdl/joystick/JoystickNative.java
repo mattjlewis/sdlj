@@ -1,54 +1,36 @@
 package com.diozero.sdl.joystick;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.tinylog.Logger;
 
 public class JoystickNative {
 	private static final String LIB_NAME = "sdljoystick";
-	private static Boolean loaded = Boolean.FALSE;
+	private static AtomicBoolean loaded = new AtomicBoolean();
 	private static Map<Integer, Joystick> joysticks;
+	private static AtomicBoolean eventLoopRunning = new AtomicBoolean();
 
 	private synchronized static void init() {
-		if (loaded == Boolean.FALSE) {
-			try (InputStream is = Thread.currentThread().getContextClassLoader()
-					.getResourceAsStream("/lib/lib" + LIB_NAME + ".so")) {
-				if (is != null) {
-					Path path = Files.createTempFile("lib" + LIB_NAME, ".so");
-					Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
-					Runtime.getRuntime().load(path.toString());
-					loaded = Boolean.TRUE;
-					path.toFile().delete();
-				}
-			} catch (IOException e) {
-				Logger.info(e, "Error loading library from classpath: {}", e);
+		if (!loaded.get()) {
+			if (!LibraryUtil.loadLibrary(LIB_NAME, JoystickNative.class)) {
+				throw new RuntimeException("Error loading SDL Joystick native library");
 			}
 
-			if (loaded == Boolean.FALSE) {
-				// Try load the usual way...
-				System.loadLibrary(LIB_NAME);
-				loaded = Boolean.TRUE;
-			}
+			loaded.set(true);
 
 			if (initialise() < 0) {
 				throw new RuntimeException("Error initialising SDL Joystick library");
 			}
 
-			joysticks = new HashMap<>();
+			joysticks = new ConcurrentHashMap<>();
 
-			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-				Logger.info("Terminating");
-				terminate();
-			}));
+			Runtime.getRuntime().addShutdownHook(new Thread(JoystickNative::shutdown));
 		}
+
 	}
 
 	static {
@@ -76,6 +58,13 @@ public class JoystickNative {
 	public static native int getButtonValue(int id, int button);
 
 	public static native int getHatValue(int id, int hat);
+
+	static void shutdown() {
+		stopEventLoop();
+		joysticks.values().forEach(JoystickNative::closeJoystick);
+		joysticks.clear();
+		terminate();
+	}
 
 	public static Joystick getJoystick(int id) {
 		Joystick joystick;
@@ -106,7 +95,7 @@ public class JoystickNative {
 	}
 
 	public static void processEvents() {
-		while (true) {
+		while (eventLoopRunning.get()) {
 			JoystickEvent event = waitForEvent();
 			if (event == null) {
 				Logger.warn("Got a null event");
@@ -119,6 +108,10 @@ public class JoystickNative {
 				}
 			}
 		}
+	}
+
+	public static void stopEventLoop() {
+		eventLoopRunning.set(false);
 	}
 
 	public static List<JoystickInfo> listJoysticks() {
