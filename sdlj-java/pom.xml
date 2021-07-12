@@ -1,9 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	
 	<groupId>com.diozero.sdlj</groupId>
 	<artifactId>sdlj-java</artifactId>
+	<packaging>jar</packaging>
 	<version>0.0.1-SNAPSHOT</version>
+	<name>sdjl - Simple SDL2 Joystick wrapper library</name>
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,16 +18,34 @@
 		
 		<!-- Maven plugins -->
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+		<maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
+		<maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
 
 		<!-- Libraries -->
 		<tinylog.version>2.3.2</tinylog.version>
+		<jansi.version>2.3.2</jansi.version>
 	</properties>
 	
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>${maven-compiler-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>${maven-jar-plugin.version}</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven-compiler-plugin.version}</version>
 				<configuration>
 					<debug>false</debug>
 					<optimize>true</optimize>
@@ -32,19 +53,58 @@
 					<showWarnings>true</showWarnings>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.tinylog</groupId>
+				<artifactId>tinylog-api</artifactId>
+				<version>${tinylog.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.tinylog</groupId>
+				<artifactId>tinylog-impl</artifactId>
+				<version>${tinylog.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>animal-sniffer-annotations</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.fusesource.jansi</groupId>
+				<artifactId>jansi</artifactId>
+				<version>${jansi.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	
 	<dependencies>
 		<dependency>
 			<groupId>org.tinylog</groupId>
 			<artifactId>tinylog-api</artifactId>
-			<version>${tinylog.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.tinylog</groupId>
 			<artifactId>tinylog-impl</artifactId>
-			<version>${tinylog.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.fusesource.jansi</groupId>
+			<artifactId>jansi</artifactId>
 		</dependency>
 	</dependencies>
 </project>

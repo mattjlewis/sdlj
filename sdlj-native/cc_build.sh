@@ -34,7 +34,7 @@ echo
 # Finally build armv6 to be extra sure that PATH has no reference to the Pi armv6 cross compiler
 echo "Compiling for ARMv6"
 OLD_PATH=${PATH}
-PATH=${PI_GCC_TARGET_DIR}/bin:${PATH} && make clean && make CROSS_PREFIX=arm-linux-gnueabihf- CFLAGS="-mfpu=vfp -mfloat-abi=hard -march=armv6" SDL2_BASE_DIR=/opt/cross-pi-gcc/arm-linux-gnueabihf
+PATH=${PI_GCC_TARGET_DIR}/bin:${PATH} && make clean && make CROSS_PREFIX=arm-linux-gnueabihf- CFLAGS="-mfpu=vfp -mfloat-abi=hard -march=armv6" SDL2_BASE_DIR=${PI_GCC_TARGET_DIR}/arm-linux-gnueabihf
 if [ $? -eq 0 ]; then
   TARGET=${LIB_DIR}/linux-armv6 && mkdir -p ${TARGET} && mv ${LIB_NAME} ${TARGET}/.
   make clean

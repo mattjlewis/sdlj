@@ -11,7 +11,7 @@ SHLIB        := $(CC) -shared
 STRIP_FLAGS  :=
 
 LIB_NAME := sdljoystick
-SRCS     := com_diozero_sdl_joystick_JoystickNative.c sdljoysticktest.c
+SRCS     := com_diozero_sdl_joystick_JoystickNative.c
 LDLIBS   := -lSDL2 -lpthread
 
 ifeq ($(OS),Windows_NT)
