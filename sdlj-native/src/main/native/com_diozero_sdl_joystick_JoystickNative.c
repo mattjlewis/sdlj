@@ -5,6 +5,7 @@
  *      Author: MATTLEWI
  */
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_joystick.h>
@@ -18,21 +19,6 @@ static jint JNI_VERSION = JNI_VERSION_1_8;
 #else
 #define long_t uint64_t
 #endif
-
-/*
-jclass deviceEventClassRef = NULL;
-jmethodID deviceEventConstructor = NULL;
-jclass buttonEventClassRef = NULL;
-jmethodID buttonEventConstructor = NULL;
-jclass axisMotionEventClassRef = NULL;
-jmethodID axisMotionEventConstructor = NULL;
-jclass hatMotionEventClassRef = NULL;
-jmethodID hatMotionEventConstructor = NULL;
-jclass ballMotionEventClassRef = NULL;
-jmethodID ballMotionEventConstructor = NULL;
-jclass touchPadEventClassRef = NULL;
-jmethodID touchPadEventConstructor = NULL;
-*/
 
 jclass sdlEventClassRef = NULL;
 jmethodID sdlEventConstructor = NULL;
@@ -87,7 +73,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* jvm, void* reserved) {
 		return JNI_ERR;
 	}
 	method_name = "<init>";
-	signature = "(ILjava/lang/String;IJZIIIIJLjava/lang/String;)V";
+	signature = "(ILjava/lang/String;IJZIIIIJLjava/lang/String;Ljava/lang/String;)V";
 	gameControllerConstructor = (*env)->GetMethodID(env, game_controller_class, method_name, signature);
 	if ((*env)->ExceptionCheck(env) || gameControllerConstructor == NULL) {
 		fprintf(stderr, "Error looking up methodID for %s.%s%s\n", class_name, method_name, signature);
@@ -107,92 +93,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* jvm, void* reserved) {
 		printf("Error looking up methodID for %s.%s%s\n", class_name, method_name, signature);
 		return JNI_ERR;
 	}
-
-	/*
-	class_name = "com/diozero/sdl/joystick/JoystickEvent$DeviceEvent";
-	jclass device_event_class = (*env)->FindClass(env, class_name);
-	if (device_event_class == NULL) {
-		printf("Error, could not find class '%s'\n", class_name);
-		return JNI_ERR;
-	}
-	method_name = "<init>";
-	signature = "(III)V";
-	deviceEventConstructor = (*env)->GetMethodID(env, device_event_class, method_name, signature);
-	if (deviceEventConstructor == NULL) {
-		printf("Error looking up methodID for %s.%s%s\n", class_name, method_name, signature);
-		return JNI_ERR;
-	}
-
-	class_name = "com/diozero/sdl/joystick/JoystickEvent$ButtonEvent";
-	jclass button_event_class = (*env)->FindClass(env, class_name);
-	if (button_event_class == NULL) {
-		printf("Error, could not find class '%s'\n", class_name);
-		return JNI_ERR;
-	}
-	method_name = "<init>";
-	signature = "(IIIZ)V";
-	buttonEventConstructor = (*env)->GetMethodID(env, button_event_class, method_name, signature);
-	if (buttonEventConstructor == NULL) {
-		printf("Error looking up methodID for %s.%s%s\n", class_name, method_name, signature);
-		return JNI_ERR;
-	}
-
-	class_name = "com/diozero/sdl/joystick/JoystickEvent$AxisMotionEvent";
-	jclass axis_motion_event_class = (*env)->FindClass(env, class_name);
-	if (axis_motion_event_class == NULL) {
-		printf("Error, could not find class '%s'\n", class_name);
-		return JNI_ERR;
-	}
-	method_name = "<init>";
-	signature = "(IIII)V";
-	axisMotionEventConstructor = (*env)->GetMethodID(env, axis_motion_event_class, method_name, signature);
-	if (axisMotionEventConstructor == NULL) {
-		printf("Error looking up methodID for %s.%s%s\n", class_name, method_name, signature);
-		return JNI_ERR;
-	}
-
-	class_name = "com/diozero/sdl/joystick/JoystickEvent$HatMotionEvent";
-	jclass hat_motion_event_class = (*env)->FindClass(env, class_name);
-	if (hat_motion_event_class == NULL) {
-		printf("Error, could not find class '%s'\n", class_name);
-		return JNI_ERR;
-	}
-	method_name = "<init>";
-	signature = "(IIII)V";
-	hatMotionEventConstructor = (*env)->GetMethodID(env, hat_motion_event_class, method_name, signature);
-	if (hatMotionEventConstructor == NULL) {
-		printf("Error looking up methodID for %s.%s%s\n", class_name, method_name, signature);
-		return JNI_ERR;
-	}
-
-	class_name = "com/diozero/sdl/joystick/JoystickEvent$BallMotionEvent";
-	jclass ball_motion_event_class = (*env)->FindClass(env, class_name);
-	if (ball_motion_event_class == NULL) {
-		printf("Error, could not find class '%s'\n", class_name);
-		return JNI_ERR;
-	}
-	method_name = "<init>";
-	signature = "(IIIII)V";
-	ballMotionEventConstructor = (*env)->GetMethodID(env, ball_motion_event_class, method_name, signature);
-	if (ballMotionEventConstructor == NULL) {
-		printf("Error looking up methodID for %s.%s%s\n", class_name, method_name, signature);
-		return JNI_ERR;
-	}
-
-	class_name = "com/diozero/sdl/joystick/JoystickEvent$TouchPadEvent";
-	jclass touch_pad_event_class = (*env)->FindClass(env, class_name);
-	if (touch_pad_event_class == NULL) {
-		printf("Error, could not find class '%s'\n", class_name);
-		return JNI_ERR;
-	}
-	method_name = "<init>";
-	signature = "(IIIIIFFF)V";
-	touchPadEventConstructor = (*env)->GetMethodID(env, touch_pad_event_class, method_name, signature);
-	if (touchPadEventConstructor == NULL) {
-		printf("Error looking up methodID for %s.%s%s\n", class_name, method_name, signature);
-		return JNI_ERR;
-	}
-	*/
 
 	//
 
@@ -218,20 +118,6 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* jvm, void* reserved) {
 	(*env)->DeleteLocalRef(env, game_controller_class);
 	ballClassRef = (*env)->NewGlobalRef(env, ball_class);
 	(*env)->DeleteLocalRef(env, ball_class);
-	/*
-	deviceEventClassRef = (*env)->NewGlobalRef(env, device_event_class);
-	(*env)->DeleteLocalRef(env, device_event_class);
-	buttonEventClassRef = (*env)->NewGlobalRef(env, button_event_class);
-	(*env)->DeleteLocalRef(env, button_event_class);
-	axisMotionEventClassRef = (*env)->NewGlobalRef(env, axis_motion_event_class);
-	(*env)->DeleteLocalRef(env, axis_motion_event_class);
-	hatMotionEventClassRef = (*env)->NewGlobalRef(env, hat_motion_event_class);
-	(*env)->DeleteLocalRef(env, hat_motion_event_class);
-	ballMotionEventClassRef = (*env)->NewGlobalRef(env, ball_motion_event_class);
-	(*env)->DeleteLocalRef(env, ball_motion_event_class);
-	touchPadEventClassRef = (*env)->NewGlobalRef(env, touch_pad_event_class);
-	(*env)->DeleteLocalRef(env, touch_pad_event_class);
-	*/
 
 	return JNI_VERSION;
 }
@@ -260,71 +146,7 @@ JNIEXPORT void JNICALL JNI_OnUnload(JavaVM* jvm, void* reserved) {
 		(*env)->DeleteGlobalRef(env, ballClassRef);
 		ballClassRef = NULL;
 	}
-
-	/*
-	if (deviceEventClassRef == NULL) {
-		(*env)->DeleteGlobalRef(env, deviceEventClassRef);
-		deviceEventClassRef = NULL;
-	}
-	if (buttonEventClassRef == NULL) {
-		(*env)->DeleteGlobalRef(env, buttonEventClassRef);
-		buttonEventClassRef = NULL;
-	}
-	if (axisMotionEventClassRef == NULL) {
-		(*env)->DeleteGlobalRef(env, axisMotionEventClassRef);
-		axisMotionEventClassRef = NULL;
-	}
-	if (hatMotionEventClassRef == NULL) {
-		(*env)->DeleteGlobalRef(env, hatMotionEventClassRef);
-		hatMotionEventClassRef = NULL;
-	}
-	if (ballMotionEventClassRef == NULL) {
-		(*env)->DeleteGlobalRef(env, ballMotionEventClassRef);
-		ballMotionEventClassRef = NULL;
-	}
-	if (touchPadEventClassRef == NULL) {
-		(*env)->DeleteGlobalRef(env, touchPadEventClassRef);
-		touchPadEventClassRef = NULL;
-	}
-	*/
 }
-
-/*
-jobject createDeviceEvent(JNIEnv* env, Uint32 type, Uint32 timestamp, Sint32 which) {
-	return (*env)->NewObject(env, deviceEventClassRef, deviceEventConstructor,
-			timestamp, which, type);
-}
-
-jobject createButtonEvent(JNIEnv* env, SDL_JoyButtonEvent jButtonEvent) {
-	return (*env)->NewObject(env, buttonEventClassRef, buttonEventConstructor,
-			jButtonEvent.timestamp, jButtonEvent.which, jButtonEvent.button,
-			jButtonEvent.state == SDL_PRESSED);
-}
-
-jobject createAxisMotionEvent(JNIEnv* env, SDL_JoyAxisEvent jAxisEvent) {
-	return (*env)->NewObject(env, axisMotionEventClassRef, axisMotionEventConstructor,
-			jAxisEvent.timestamp, jAxisEvent.which, jAxisEvent.axis, jAxisEvent.value);
-}
-
-jobject createHatMotionEvent(JNIEnv* env, SDL_JoyHatEvent jHatEvent) {
-	return (*env)->NewObject(env, hatMotionEventClassRef, hatMotionEventConstructor,
-			jHatEvent.timestamp, jHatEvent.which, jHatEvent.hat, jHatEvent.value);
-}
-
-jobject createBallMotionEvent(JNIEnv* env, SDL_JoyBallEvent jBallEvent) {
-	return (*env)->NewObject(env, ballMotionEventClassRef, ballMotionEventConstructor,
-			jBallEvent.timestamp, jBallEvent.which, jBallEvent.ball,
-			jBallEvent.xrel, jBallEvent.yrel);
-}
-
-jobject createTouchPadEvent(JNIEnv* env, SDL_ControllerTouchpadEvent touchPadEvent) {
-	return (*env)->NewObject(env, touchPadEventClassRef, touchPadEventConstructor,
-			touchPadEvent.timestamp, touchPadEvent.which, touchPadEvent.type,
-			touchPadEvent.touchpad, touchPadEvent.finger,
-			touchPadEvent.x, touchPadEvent.y,
-			touchPadEvent.pressure);
-}
-*/
 
 jobject createSdlEvent(JNIEnv* env, SDL_Event sdlEvent) {
 	jbyteArray byte_array = (*env)->NewByteArray(env, 56);
@@ -335,6 +157,8 @@ jobject createSdlEvent(JNIEnv* env, SDL_Event sdlEvent) {
 
 JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_initialise(
 		JNIEnv* env, jclass clz) {
+	SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "1");
+	SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4, "1");
 	SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
 
 	// SDL_INIT_GAMECONTROLLER implies SDL_INIT_JOYSTICK
@@ -350,12 +174,46 @@ JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_initialise(
 	return 0;
 }
 
+JNIEXPORT jstring JNICALL Java_com_diozero_sdl_joystick_JoystickNative_sdlGetCompiledVersion(
+		JNIEnv* env, jclass clz) {
+	SDL_version sdl_ver;
+	SDL_VERSION(&sdl_ver);
+	char* version_string;
+	if (asprintf(&version_string, "%d.%d.%d", sdl_ver.major, sdl_ver.minor, sdl_ver.patch) < 0) {
+		perror("Error creating compiled version string");
+		return NULL;
+	}
+
+	return (*env)->NewStringUTF(env, version_string);
+}
+
+JNIEXPORT jstring JNICALL Java_com_diozero_sdl_joystick_JoystickNative_sdlGetLinkedVersion(
+		JNIEnv* env, jclass clz) {
+	SDL_version sdl_ver;
+	SDL_GetVersion(&sdl_ver);
+	char* version_string;
+	if (asprintf(&version_string, "%d.%d.%d", sdl_ver.major, sdl_ver.minor, sdl_ver.patch) < 0) {
+		perror("Error creating linked version string");
+		return NULL;
+	}
+
+	return (*env)->NewStringUTF(env, version_string);
+}
+
+JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_addGameControllerMappingsFromFile(
+		JNIEnv* env, jclass clz, jstring mappingsFile) {
+	jboolean is_copy;
+	const char* str = (*env)->GetStringUTFChars(env, mappingsFile, &is_copy);
+	int rc = SDL_GameControllerAddMappingsFromFile((char*) str);
+	(*env)->ReleaseStringUTFChars(env, mappingsFile, str);
+	return rc;
+}
+
 JNIEXPORT void JNICALL Java_com_diozero_sdl_joystick_JoystickNative_terminate(
 		JNIEnv* env, jclass clz) {
-	printf("terminate() - START\n");
-
 	SDL_JoystickEventState(SDL_IGNORE);
 	SDL_GameControllerEventState(SDL_IGNORE);
+
 	if (SDL_WasInit(SDL_INIT_EVENTS) != 0) {
 		SDL_QuitSubSystem(SDL_INIT_EVENTS);
 	}
@@ -368,8 +226,7 @@ JNIEXPORT void JNICALL Java_com_diozero_sdl_joystick_JoystickNative_terminate(
 		SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
 	}
 
-	//SDL_Quit();
-	printf("terminate() - END\n");
+	SDL_Quit();
 }
 
 JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_getNumJoysticks(
@@ -387,7 +244,8 @@ JNIEXPORT jobjectArray JNICALL Java_com_diozero_sdl_joystick_JoystickNative_getJ
 	if (num_joysticks > 0) {
 		int i;
 		for (i=0; i<num_joysticks; i++) {
-			(*env)->SetObjectArrayElement(env, joystick_names, i, (*env)->NewStringUTF(env, SDL_JoystickNameForIndex(i)));
+			(*env)->SetObjectArrayElement(env, joystick_names, i,
+					(*env)->NewStringUTF(env, SDL_JoystickNameForIndex(i)));
 		}
 	}
 
@@ -447,11 +305,13 @@ JNIEXPORT void JNICALL Java_com_diozero_sdl_joystick_JoystickNative_stopSdlEvent
 	SDL_QuitSubSystem(SDL_INIT_EVENTS);
 }
 
-JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_getDeviceType(JNIEnv* env, jclass clz, jint deviceIndex) {
+JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_getDeviceType(
+		JNIEnv* env, jclass clz, jint deviceIndex) {
 	return SDL_JoystickGetDeviceType(deviceIndex);
 }
 
-JNIEXPORT jboolean JNICALL Java_com_diozero_sdl_joystick_JoystickNative_isGameController(JNIEnv* env, jclass clz, jint deviceIndex) {
+JNIEXPORT jboolean JNICALL Java_com_diozero_sdl_joystick_JoystickNative_isGameController(
+		JNIEnv* env, jclass clz, jint deviceIndex) {
 	return SDL_IsGameController(deviceIndex) == SDL_TRUE ? JNI_TRUE : JNI_FALSE;
 }
 
@@ -474,28 +334,40 @@ JNIEXPORT jobject JNICALL Java_com_diozero_sdl_joystick_JoystickNative_openJoyst
 			SDL_JoystickNumButtons(joystick), SDL_JoystickNumHats(joystick));
 }
 
+JNIEXPORT jboolean JNICALL Java_com_diozero_sdl_joystick_JoystickNative_isJoystickAttached(
+		JNIEnv* env, jclass clz, jlong joystickPointer) {
+	return SDL_JoystickGetAttached((SDL_Joystick*) (long_t) joystickPointer);
+}
+
 JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_getType(
 		JNIEnv* env, jclass clz, jlong joystickPointer) {
-	SDL_Joystick* joystick = (SDL_Joystick*) (long_t) joystickPointer;
-
-	return SDL_JoystickGetType(joystick);
+	return SDL_JoystickGetType((SDL_Joystick*) (long_t) joystickPointer);
 }
 
 JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_getCurrentPowerLevel(
 		JNIEnv* env, jclass clz, jlong joystickPointer) {
-	SDL_Joystick* joystick = (SDL_Joystick*) (long_t) joystickPointer;
-
-	return SDL_JoystickCurrentPowerLevel(joystick);
+	return SDL_JoystickCurrentPowerLevel((SDL_Joystick*) (long_t) joystickPointer);
 }
 
-/*
+// Added in SDL2 v2.0.14
 JNIEXPORT jboolean JNICALL Java_com_diozero_sdl_joystick_JoystickNative_hasLed(
 		JNIEnv* env, jclass clz, jlong joystickPointer) {
-	SDL_Joystick* joystick = (SDL_Joystick*) (long_t) joystickPointer;
-
-	return SDL_JoystickHasLED(joystick);
+#if SDL_MAJOR_VERSION >= 2 && SDL_PATCH_VERSION >= 14
+	return SDL_JoystickHasLED((SDL_Joystick*) (long_t) joystickPointer) == SDL_TRUE ? JNI_TRUE : JNI_FALSE;
+#else
+	return JNI_FALSE;
+#endif
 }
-*/
+
+JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_setLed(
+		JNIEnv* env, jclass clz, jlong joystickPointer, jint red, jint green, jint blue) {
+#if SDL_MAJOR_VERSION >= 2 && SDL_PATCH_VERSION >= 14
+	return SDL_JoystickSetLED((SDL_Joystick*) (long_t) joystickPointer,
+			(Uint8) red, (Uint8) green, (Uint8) blue);
+#else
+	return -1;
+#endif
+}
 
 JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_getAxisValue(
 		JNIEnv* env, jclass clz, jlong joystickPointer, jint axis) {
@@ -559,16 +431,18 @@ JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_rumble(
 			(Uint16) (highFrequencyRumble & 0xffff), (Uint32) (durationMs & 0xffffffff));
 }
 
-/*
- * Not present in SDL2 v2.0.9
+// Added in SDL2 v2.0.14
 JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_rumbleTriggers(
 		JNIEnv* env, jclass clz, jlong joystickPointer, jint leftRumble, jint rightRumble, jlong durationMs) {
+#if SDL_MAJOR_VERSION >= 2 && SDL_PATCH_VERSION >= 14
 	SDL_Joystick* joystick = (SDL_Joystick*) (long_t) joystickPointer;
 
 	return SDL_JoystickRumbleTriggers(joystick, (Uint16) (leftRumble & 0xffff),
 			(Uint16) (rightRumble & 0xffff), (Uint32) (durationMs & 0xffffffff));
+#else
+	return -1;
+#endif
 }
-*/
 
 JNIEXPORT void JNICALL Java_com_diozero_sdl_joystick_JoystickNative_closeJoystick(
 		JNIEnv* env, jclass clz, jlong joystickPointer) {
@@ -585,21 +459,34 @@ JNIEXPORT jobject JNICALL Java_com_diozero_sdl_joystick_JoystickNative_openGameC
 		return NULL;
 	}
 
-	// Not present in SDL2 v2.0.9
-	//SDL_GameControllerSetSensorEnabled(game_controller, SDL_SENSOR_GYRO, SDL_TRUE);
+	// Added in SDL2 v2.0.14
+#if SDL_MAJOR_VERSION >= 2 && SDL_PATCH_VERSION >= 14
+	SDL_version linked;
+	SDL_GetVersion(&linked);
+	if (linked.major >= 2 && linked.patch >= 14) {
+		SDL_GameControllerSetSensorEnabled(game_controller, SDL_SENSOR_GYRO, SDL_TRUE);
+	}
+#endif
 
 	char* gc_mapping = SDL_GameControllerMapping(game_controller);
 	SDL_Joystick* joystick = SDL_GameControllerGetJoystick(game_controller);
 
-	if (SDL_JoystickIsHaptic(joystick)) {
+	// TODO Remove
+	if (SDL_JoystickIsHaptic(joystick) == SDL_TRUE) {
 		SDL_Haptic* haptic = SDL_HapticOpenFromJoystick(joystick);
 		printf("Haptic Effects: %d\n", SDL_HapticNumEffects(haptic));
 		printf("Haptic Query: %x\n", SDL_HapticQuery(haptic));
+		/*
 		if (SDL_HapticRumbleSupported(haptic)) {
 			if (SDL_HapticRumbleInit(haptic) != 0) {
 				printf("Haptic Rumble init failed: %s\n", SDL_GetError());
+			} else {
+				if (SDL_HapticRumblePlay(haptic, 0.5, 250) != 0) {
+					printf("Haptic Rumble play failed: %s\n", SDL_GetError());
+				}
 			}
 		}
+		*/
 		SDL_HapticClose(haptic);
 	} else {
 		printf("Not a haptic device\n");
@@ -607,17 +494,24 @@ JNIEXPORT jobject JNICALL Java_com_diozero_sdl_joystick_JoystickNative_openGameC
 
 	jobject obj = (*env)->NewObject(env, gameControllerClassRef, gameControllerConstructor,
 			deviceIndex,
-			(*env)->NewStringUTF(env, SDL_GameControllerName(game_controller)),
+			(*env)->NewStringUTF(env, SDL_JoystickName(joystick)),
 			SDL_JoystickInstanceID(joystick),
 			(jlong) (long_t) joystick,
 			SDL_JoystickIsHaptic(joystick) == SDL_TRUE ? JNI_TRUE : JNI_FALSE,
 			SDL_JoystickNumAxes(joystick), SDL_JoystickNumBalls(joystick),
 			SDL_JoystickNumButtons(joystick), SDL_JoystickNumHats(joystick),
-			(jlong) (long_t) game_controller, (*env)->NewStringUTF(env, gc_mapping));
+			(jlong) (long_t) game_controller,
+			(*env)->NewStringUTF(env, SDL_GameControllerName(game_controller)),
+			(*env)->NewStringUTF(env, gc_mapping));
 
 	SDL_free(gc_mapping);
 
 	return obj;
+}
+
+JNIEXPORT jboolean JNICALL Java_com_diozero_sdl_joystick_JoystickNative_isGameControllerAttached(
+		JNIEnv* env, jclass clz, jlong gameControllerPointer) {
+	return SDL_GameControllerGetAttached((SDL_GameController*) (long_t) gameControllerPointer);
 }
 
 JNIEXPORT void JNICALL Java_com_diozero_sdl_joystick_JoystickNative_closeGameController(

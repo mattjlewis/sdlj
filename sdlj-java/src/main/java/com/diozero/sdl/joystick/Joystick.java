@@ -2,9 +2,22 @@ package com.diozero.sdl.joystick;
 
 import org.tinylog.Logger;
 
+/*-
+ * PS4 DualShock 4
+ *
+ *     11  Back-8   Start-9   Y-2
+ * 13-DPAD-14              X-3   B-1
+ *     12      Guide-10       A-0
+ *
+ * PS3 DualShock 3
+ *     8
+ *     11  Back-?   Start-?   Y-3
+ * ??-DPAD-16              X-2   B-1
+ *     12      Guide-??       A-0
+ */
 public class Joystick extends JoystickInfo implements AutoCloseable {
 	private int instanceId;
-	private long pointer;
+	private long joystickPointer;
 	private boolean haptic;
 	private int numAxes;
 	private int numBalls;
@@ -14,12 +27,12 @@ public class Joystick extends JoystickInfo implements AutoCloseable {
 	// FIXME Fix event masking - by sub-system?
 	private int eventTypeMask = 0xffff;
 
-	Joystick(int id, String name, int sdlTypeOrdinal, boolean gameController, int instanceId, long pointer,
+	Joystick(int id, String name, int sdlTypeOrdinal, boolean gameController, int instanceId, long joystickPointer,
 			boolean haptic, int numAxes, int numBalls, int numButtons, int numHats) {
 		super(id, name, sdlTypeOrdinal, gameController);
 
 		this.instanceId = instanceId;
-		this.pointer = pointer;
+		this.joystickPointer = joystickPointer;
 		this.haptic = haptic;
 		this.numAxes = numAxes;
 		this.numBalls = numBalls;
@@ -32,11 +45,15 @@ public class Joystick extends JoystickInfo implements AutoCloseable {
 	}
 
 	public long getJoystickPointer() {
-		return pointer;
+		return joystickPointer;
 	}
 
 	public boolean isHaptic() {
 		return haptic;
+	}
+
+	public boolean isAttached() {
+		return JoystickNative.isJoystickAttached(joystickPointer);
 	}
 
 	public int getNumAxes() {
@@ -56,19 +73,19 @@ public class Joystick extends JoystickInfo implements AutoCloseable {
 	}
 
 	public int getAxisValue(int axis) {
-		return JoystickNative.getAxisValue(pointer, axis);
+		return JoystickNative.getAxisValue(joystickPointer, axis);
 	}
 
 	public boolean getButtonValue(int button) {
-		return JoystickNative.getButtonValue(pointer, button) == 1;
+		return JoystickNative.getButtonValue(joystickPointer, button) == 1;
 	}
 
 	public PowerLevel getCurrentPowerLevel() {
-		return PowerLevel.valueOf(JoystickNative.getCurrentPowerLevel(pointer));
+		return PowerLevel.valueOf(JoystickNative.getCurrentPowerLevel(joystickPointer));
 	}
 
 	public int rumble(int lowFrequencyRumble, int highFrequencyRumble, long durationMs) {
-		return JoystickNative.rumble(pointer, lowFrequencyRumble, highFrequencyRumble, durationMs);
+		return JoystickNative.rumble(joystickPointer, lowFrequencyRumble, highFrequencyRumble, durationMs);
 	}
 
 	/*-

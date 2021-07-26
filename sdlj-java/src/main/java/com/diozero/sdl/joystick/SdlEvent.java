@@ -103,7 +103,7 @@ public class SdlEvent {
 			j_ev = new JoystickEvent.SensorUpdateEvent(timestamp, which, sensor, f1, f2, f3);
 			break;
 		default:
-			System.out.println("Unknwon JoystickEvent " + type);
+			System.out.println("Unknown JoystickEvent " + type);
 			j_ev = null;
 		}
 

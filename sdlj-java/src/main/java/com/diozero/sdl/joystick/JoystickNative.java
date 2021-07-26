@@ -1,5 +1,10 @@
 package com.diozero.sdl.joystick;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +20,8 @@ public class JoystickNative {
 	private static AtomicBoolean loaded = new AtomicBoolean();
 	private static Map<Integer, Joystick> joysticks;
 	private static AtomicBoolean eventLoopRunning = new AtomicBoolean();
+	private static String compiledVersion;
+	private static String linkedVersion;
 
 	private synchronized static void init() {
 		if (!loaded.get()) {
@@ -26,6 +33,28 @@ public class JoystickNative {
 
 			if (initialise() < 0) {
 				throw new RuntimeException("Error initialising SDL Joystick library");
+			}
+
+			compiledVersion = sdlGetCompiledVersion();
+			linkedVersion = sdlGetLinkedVersion();
+
+			// Also set as SDL_GAMECONTROLLERCONFIG
+			// https://github.com/gabomdq/SDL_GameControllerDB (v2.0.10 and later)
+			// FIXME Unpack the version string...
+			if (!linkedVersion.equals("2.0.9")) {
+				try (InputStream is = JoystickNative.class.getResourceAsStream("/gamecontrollerdb.txt")) {
+					if (is != null) {
+						Path path = Files.createTempFile("gamecontrollerdb", "txt");
+						path.toFile().deleteOnExit();
+						Files.copy(is, path, StandardCopyOption.REPLACE_EXISTING);
+						if (addGameControllerMappingsFromFile(path.toString()) < 0) {
+							Logger.warn("Failed to load controller mappings");
+						}
+						path.toFile().delete();
+					}
+				} catch (IOException e) {
+					Logger.warn(e, "Can't load game controller db file: {}", e);
+				}
 			}
 
 			joysticks = new ConcurrentHashMap<>();
@@ -41,9 +70,15 @@ public class JoystickNative {
 
 	static native int initialise();
 
+	static native String sdlGetCompiledVersion();
+
+	static native String sdlGetLinkedVersion();
+
+	static native int addGameControllerMappingsFromFile(String mappingsFile);
+
 	static native void terminate();
 
-	static native int getNumJoysticks();
+	public static native int getNumJoysticks();
 
 	static native String[] getJoystickNames();
 
@@ -57,7 +92,15 @@ public class JoystickNative {
 
 	static native Joystick openJoystick(int deviceIndex);
 
+	static native boolean isJoystickAttached(long joystickPointer);
+
 	static native int getCurrentPowerLevel(long joystickPointer);
+
+	// Added in v2.0.14
+	static native boolean hasLed(long joystickPointer);
+
+	// Added in v2.0.14
+	static native int setLed(long joystickPointer, int red, int green, int blue);
 
 	static native int getAxisValue(long joystickPointer, int axis);
 
@@ -69,12 +112,14 @@ public class JoystickNative {
 
 	static native int rumble(long joystickPointer, int lowFrequencyRumble, int highFrequencyRumble, long durationMs);
 
-	// static native int rumbleTriggers(long joystickPointer, int leftRumble, int
-	// rightRumble, long durationMs);
+	// Added in v2.0.14
+	static native int rumbleTriggers(long joystickPointer, int leftRumble, int rightRumble, long durationMs);
 
 	static native void closeJoystick(long joystickPointer);
 
 	static native GameController openGameController(int deviceIndex);
+
+	static native boolean isGameControllerAttached(long gameControllerPointer);
 
 	static native void closeGameController(long gameControllerPointer);
 
@@ -84,6 +129,14 @@ public class JoystickNative {
 		joysticks.values().forEach(Joystick::close);
 		joysticks.clear();
 		terminate();
+	}
+
+	public static String getCompiledVersion() {
+		return compiledVersion;
+	}
+
+	public static String getLinkedVersion() {
+		return linkedVersion;
 	}
 
 	public static Joystick getJoystickOrGameController(int id) {

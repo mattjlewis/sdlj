@@ -8,19 +8,26 @@ import org.tinylog.Logger;
 
 public class GameController extends Joystick {
 	private long gameControllerPointer;
+	private String gameControllerName;
 	private Map<Integer, Button> buttonMappings;
 	private Map<Integer, Axis> axisMappings;
 
 	public GameController(int id, String name, int instanceId, long joystickPointer, boolean haptic, int numAxes,
-			int numBalls, int numButtons, int numHats, long gameControllerPointer, String mapping) {
+			int numBalls, int numButtons, int numHats, long gameControllerPointer, String gameControllerName,
+			String mapping) {
 		super(id, name, 1, true, instanceId, joystickPointer, haptic, numAxes, numBalls, numButtons, numHats);
 
 		this.gameControllerPointer = gameControllerPointer;
+		this.gameControllerName = gameControllerName;
 		unpackMapping(mapping);
 	}
 
 	public long getGameControllerPointer() {
 		return gameControllerPointer;
+	}
+
+	public String getGameControllerName() {
+		return gameControllerName;
 	}
 
 	public Map<Integer, Button> getButtonMappings() {
@@ -40,6 +47,11 @@ public class GameController extends Joystick {
 	}
 
 	@Override
+	public boolean isAttached() {
+		return JoystickNative.isGameControllerAttached(gameControllerPointer);
+	}
+
+	@Override
 	public void close() {
 		Logger.info("close()");
 		// Note do NOT call Jostick.close()
@@ -47,6 +59,8 @@ public class GameController extends Joystick {
 	}
 
 	private void unpackMapping(String mappingItems) {
+		System.out.println("processing mapping: " + mappingItems);
+
 		Map<Integer, Button> button_mappings = new HashMap<>();
 		Map<Integer, Axis> axis_mappings = new HashMap<>();
 
@@ -83,8 +97,8 @@ public class GameController extends Joystick {
 	}
 
 	public enum Button {
-		INVALID, A, B, X, Y, BACK, GUIDE, START, LEFTSTICK, RIGHTSTICK, LEFTSHOULDER, RIGHTSHOULDER, DPUP, DPDOWN,
-		DPLEFT, DPRIGHT, MISC1, PADDLE1, PADDLE2, PADDLE3, PADDLE4, TOUCHPAD, MAX;
+		INVALID, A, B, X, Y, BACK, GUIDE, START, LEFTSTICK, RIGHTSTICK, LEFTSHOULDER, RIGHTSHOULDER, LEFTTRIGGER,
+		RIGHTTRIGGER, DPUP, DPDOWN, DPLEFT, DPRIGHT, MISC1, PADDLE1, PADDLE2, PADDLE3, PADDLE4, TOUCHPAD, MAX;
 	}
 
 	public enum Axis {

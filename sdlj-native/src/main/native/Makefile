@@ -12,7 +12,7 @@ STRIP_FLAGS  :=
 
 LIB_NAME := sdljoystick
 SRCS     := com_diozero_sdl_joystick_JoystickNative.c
-LDLIBS   := -lSDL2 -lpthread
+LDLIBS   := -Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lpthread
 
 ifeq ($(OS),Windows_NT)
     uname_S := Windows
@@ -36,7 +36,7 @@ ifeq ($(uname_S), Darwin)
     STRIP_FLAGS += -x
 endif
 
-override CFLAGS := -O3 -Wall -pthread -fPIC $(CFLAGS)
+override CFLAGS := -O3 -Wall -pthread -fPIC -D_REENTRANT $(CFLAGS)
 
 INCLUDES   := -I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/$(OS_JAVA_INC) -I$(SDL2_BASE_DIR)/include/SDL2
 LIB_PREFIX ?= lib

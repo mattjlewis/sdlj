@@ -6,8 +6,17 @@ import org.fusesource.jansi.AnsiConsole;
 import org.tinylog.Logger;
 
 public class JoystickTest {
+	private static final long RUMBLE_DURATION = 100;
+	private static int leftRumble;
+	private static long leftRumbleStart;
+	private static int rightRumble;
+	private static long rightRumbleStart;
+
 	@SuppressWarnings("boxing")
 	public static void main(String[] args) {
+		Logger.info("Compiled version: {}. Linked version: {}", JoystickNative.getCompiledVersion(),
+				JoystickNative.getLinkedVersion());
+
 		try {
 			if (JoystickNative.getNumJoysticks() < 1) {
 				Logger.error("No joysticks detected.");
@@ -19,59 +28,82 @@ public class JoystickTest {
 				Logger.info(j_info);
 			}
 
-			int joystick_id = 0;
-			Logger.info("Getting Joystick({})", joystick_id);
-			try (Joystick joystick = JoystickNative.getJoystickOrGameController(joystick_id)) {
-				if (joystick == null) {
-					Logger.error("Failed to open Joystick {}", joystick_id);
-					return;
+			// Find the first attached joystick
+			for (int joystick_id = 0; joystick_id < JoystickNative.getNumJoysticks(); joystick_id++) {
+				Logger.info("Getting Joystick({})", joystick_id);
+				try (Joystick joystick = JoystickNative.getJoystickOrGameController(joystick_id)) {
+					if (joystick == null) {
+						Logger.error("Failed to open Joystick {}", joystick_id);
+						return;
+					}
+
+					System.out.println("joystick_id: " + joystick_id + ". instance_id: " + joystick.getInstanceId());
+
+					if (!joystick.isAttached()) {
+						System.out.println("Not attached");
+						continue;
+					}
+
+					if (joystick.getName().equals("Wireless Controller Motion Sensors")) {
+						System.out.println("Ignoring motion sensors devices");
+						continue;
+					}
+
+					/*-
+					Joystick (Wireless Controller) has 8 axes (X, Y, Z, Rx, Ry, Rz, Hat0X, Hat0Y)
+					and 13 buttons (BtnA, BtnB, BtnX, BtnY, BtnTL, BtnTR, BtnTL2, BtnTR2, BtnSelect, BtnStart, BtnMode, BtnThumbL, BtnThumbR).
+					 */
+					Logger.info(
+							"Joystick ({}) has {} axes, {} buttons, {} hats, and {} balls. Power level: {}. Type: {}."
+									+ " Game Controller? {}. Haptic? {}",
+							joystick.getName(), joystick.getNumAxes(), joystick.getNumButtons(), joystick.getNumBalls(),
+							joystick.getNumHats(), joystick.getCurrentPowerLevel(), joystick.getType(),
+							joystick.isGameController(), joystick.isHaptic());
+
+					if (JoystickNative.hasLed(joystick.getJoystickPointer())) {
+						System.out.println("Has LED!");
+						JoystickNative.setLed(joystick.getJoystickPointer(), 127, 127, 127);
+					} else {
+						System.out.println("No LED detected");
+					}
+
+					if (joystick.isGameController()) {
+						@SuppressWarnings("resource")
+						GameController game_controller = (GameController) joystick;
+
+						Logger.info("GameController ({}) - button mappings: {}, axis mappings: {}",
+								game_controller.getGameControllerName(), game_controller.getButtonMappings(),
+								game_controller.getAxisMappings());
+					}
+
+					Logger.info("Trying low frequency rumble...");
+					if (joystick.rumble(0xffff, 0, 400) < 0) {
+						Logger.info("Rumble not supported");
+					} else {
+						Thread.sleep(500);
+						Logger.info("Trying high frequency rumble...");
+						joystick.rumble(0, 0xffff, 400);
+						Thread.sleep(500);
+						joystick.rumble(0, 0, 50);
+					}
+
+					/*-
+					Logger.info("Trying left trigger rumble...");
+					if (joystick.rumbleTriggers(Short.MAX_VALUE / 2, 0, 500) < 0) {
+						Logger.info("Rumble triggers not supported");
+					} else {
+						Thread.sleep(500);
+						Logger.info("Trying right trigger rumble...");
+						joystick.rumbleTriggers(0, Short.MAX_VALUE / 2, 500);
+						Thread.sleep(500);
+					}
+					*/
+
+					testEvents(joystick);
+					// testPoll(joystick);
+
+					break;
 				}
-
-				System.out.println("joystick_id: " + joystick_id + ". instance_id: " + joystick.getInstanceId());
-
-				/*-
-				Joystick (Wireless Controller) has 8 axes (X, Y, Z, Rx, Ry, Rz, Hat0X, Hat0Y)
-				and 13 buttons (BtnA, BtnB, BtnX, BtnY, BtnTL, BtnTR, BtnTL2, BtnTR2, BtnSelect, BtnStart, BtnMode, BtnThumbL, BtnThumbR).
-				 */
-				Logger.info(
-						"Joystick ({}) has {} axes, {} buttons, {} hats, and {} balls. Power level: {}. Type: {}."
-								+ " Game Controller? {}. Haptic? {}",
-						joystick.getName(), joystick.getNumAxes(), joystick.getNumButtons(), joystick.getNumBalls(),
-						joystick.getNumHats(), joystick.getCurrentPowerLevel(), joystick.getType(),
-						joystick.isGameController(), joystick.isHaptic());
-
-				if (joystick.isGameController()) {
-					@SuppressWarnings("resource")
-					GameController game_controller = (GameController) joystick;
-
-					Logger.info("GameController - button mappings: {}, axis mappings: {}",
-							game_controller.getButtonMappings(), game_controller.getAxisMappings());
-				}
-
-				Logger.info("Trying low frequency rumble...");
-				if (joystick.rumble(0xffff, 0, 500) < 0) {
-					Logger.info("Rumble not supported");
-				} else {
-					Thread.sleep(500);
-					Logger.info("Trying high frequency rumble...");
-					joystick.rumble(0, 0xffff, 500);
-					Thread.sleep(500);
-				}
-
-				/*-
-				Logger.info("Trying left trigger rumble...");
-				if (joystick.rumbleTriggers(Short.MAX_VALUE / 2, 0, 500) < 0) {
-					Logger.info("Rumble triggers not supported");
-				} else {
-					Thread.sleep(500);
-					Logger.info("Trying right trigger rumble...");
-					joystick.rumbleTriggers(0, Short.MAX_VALUE / 2, 500);
-					Thread.sleep(500);
-				}
-				*/
-
-				testEvents(joystick);
-				// testPoll(joystick);
 			}
 		} catch (InterruptedException e) {
 			Logger.info(e, "Interrupted: {}", e);
@@ -86,16 +118,44 @@ public class JoystickTest {
 
 	static void processEvent(Joystick joystick, JoystickEvent event) {
 		System.out.println(event);
+
 		if (joystick.isGameController()) {
 			GameController game_controller = (GameController) joystick;
 			switch (event.getType()) {
 			case AXIS_MOTION:
-				System.out.println(
-						"Axis: " + game_controller.getAxisMapping(((JoystickEvent.AxisMotionEvent) event).getAxis()));
+				JoystickEvent.AxisMotionEvent axis_motion_event = (JoystickEvent.AxisMotionEvent) event;
+				GameController.Axis axis = game_controller.getAxisMapping(axis_motion_event.getAxis());
+				System.out.println("Axis: " + axis + ", Value: " + joystick.getAxisValue(axis_motion_event.getAxis()));
+				if (axis == GameController.Axis.RIGHTTRIGGER
+						&& ((System.currentTimeMillis() - rightRumbleStart) > RUMBLE_DURATION)
+						|| rightRumbleStart == 0) {
+					// Event value is -1 .. 1
+					// Axis.getValue is -32768..32767
+					// Rumble is Uint16 so 0..65535
+					rightRumbleStart = System.currentTimeMillis();
+					rightRumble = (int) ((axis_motion_event.getValue() + 1) * 32768);
+					Logger.info("Setting rumble to {}", Integer.valueOf(rightRumble));
+					game_controller.rumble(leftRumble, rightRumble, RUMBLE_DURATION);
+				} else if (axis == GameController.Axis.LEFTTRIGGER
+						&& ((System.currentTimeMillis() - leftRumbleStart) > RUMBLE_DURATION) || leftRumbleStart == 0) {
+					// Event value is -1 .. 1
+					// Axis.getValue is -32768..32767
+					// Rumble is Uint16 so 0..65535
+					leftRumbleStart = System.currentTimeMillis();
+					leftRumble = (int) ((axis_motion_event.getValue() + 1) * 32768);
+					Logger.info("Setting rumble to {}", Integer.valueOf(leftRumble));
+					game_controller.rumble(leftRumble, rightRumble, RUMBLE_DURATION);
+				}
+
 				break;
 			case BUTTON_PRESS:
-				System.out.println(
-						"Button: " + game_controller.getButtonMapping(((JoystickEvent.ButtonEvent) event).getButton()));
+				GameController.Button button = game_controller
+						.getButtonMapping(((JoystickEvent.ButtonEvent) event).getButton());
+				System.out.println("Button: " + button);
+				if (button == GameController.Button.X) {
+					Logger.info("Setting rumble to {}", Integer.valueOf(0));
+					game_controller.rumble(0, 0, RUMBLE_DURATION);
+				}
 				break;
 			default:
 				// Ignore
