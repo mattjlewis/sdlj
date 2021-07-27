@@ -80,15 +80,15 @@ public class JoystickNative {
 
 	public static native int getNumJoysticks();
 
-	static native String[] getJoystickNames();
+	public static native String[] getJoystickNames();
 
 	static native SdlEvent waitForEvent();
 
 	static native void stopSdlEvents();
 
-	static native int getDeviceType(int deviceIndex);
+	public static native int getDeviceType(int deviceIndex);
 
-	static native boolean isGameController(int deviceIndex);
+	public static native boolean isGameController(int deviceIndex);
 
 	static native Joystick openJoystick(int deviceIndex);
 
@@ -174,8 +174,9 @@ public class JoystickNative {
 
 	static void closeGameController(GameController gameController) {
 		Logger.debug("Removing joystick {} from hashmap", Integer.valueOf(gameController.getId()));
-		joysticks.remove(Integer.valueOf(gameController.getId()));
-		closeGameController(gameController.getGameControllerPointer());
+		if (joysticks.remove(Integer.valueOf(gameController.getId())) != null) {
+			closeGameController(gameController.getGameControllerPointer());
+		}
 	}
 
 	public static void processEvents() {

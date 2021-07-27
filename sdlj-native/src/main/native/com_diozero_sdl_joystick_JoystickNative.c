@@ -258,44 +258,6 @@ JNIEXPORT jobject JNICALL Java_com_diozero_sdl_joystick_JoystickNative_waitForEv
 	if (SDL_WaitEvent(&sdl_event) == 0) {
 		return NULL;
 	}
-
-	/*
-	jobject event;
-
-	switch (sdl_event.type) {
-	case SDL_JOYDEVICEADDED:
-	case SDL_JOYDEVICEREMOVED:
-	case SDL_CONTROLLERDEVICEADDED:
-	case SDL_CONTROLLERDEVICEREMOVED:
-	case SDL_CONTROLLERDEVICEREMAPPED:
-		event = createDeviceEvent(env, sdl_event.cdevice.type, sdl_event.cdevice.timestamp, sdl_event.cdevice.which);
-		break;
-	case SDL_JOYBUTTONDOWN:
-	case SDL_JOYBUTTONUP:
-		event = createButtonEvent(env, sdl_event.jbutton);
-		break;
-	case SDL_JOYAXISMOTION:
-		event = createAxisMotionEvent(env, sdl_event.jaxis);
-		break;
-	case SDL_JOYHATMOTION:
-		event = createHatMotionEvent(env, sdl_event.jhat);
-		break;
-	case SDL_JOYBALLMOTION:
-		event = createBallMotionEvent(env, sdl_event.jball);
-		break;
-	// Not present in SDL2 v2.0.9
-	case SDL_CONTROLLERTOUCHPADDOWN:
-	case SDL_CONTROLLERTOUCHPADMOTION:
-	case SDL_CONTROLLERTOUCHPADUP:
-		printf("touchpad event %d\n", sdl_event.ctouchpad.type);
-		event = createTouchPadEvent(env, sdl_event.ctouchpad);
-		break;
-	default:
-		event = createSdlEvent(env, sdl_event);
-	}
-
-	return event;
-	*/
 	return createSdlEvent(env, sdl_event);
 }
 

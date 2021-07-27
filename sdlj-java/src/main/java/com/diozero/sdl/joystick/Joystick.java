@@ -25,7 +25,7 @@ public class Joystick extends JoystickInfo implements AutoCloseable {
 	private int numHats;
 	private JoystickEventListener listener;
 	// FIXME Fix event masking - by sub-system?
-	private int eventTypeMask = 0xffff;
+	private int eventCategoryMask = 0xffff;
 
 	Joystick(int id, String name, int sdlTypeOrdinal, boolean gameController, int instanceId, long joystickPointer,
 			boolean haptic, int numAxes, int numBalls, int numButtons, int numHats) {
@@ -103,9 +103,9 @@ public class Joystick extends JoystickInfo implements AutoCloseable {
 	}
 
 	void newEvent(JoystickEvent event) {
-		Logger.debug("eventTypeMask={}, mask hit={}", Integer.valueOf(eventTypeMask),
-				Integer.valueOf(eventTypeMask & event.getType().getMask()));
-		if (listener != null && (eventTypeMask & event.getType().getMask()) != 0) {
+		Logger.debug("eventCategoryMask={}, mask hit={}", Integer.valueOf(eventCategoryMask),
+				Integer.valueOf(eventCategoryMask & event.getCategory().getMask()));
+		if (listener != null && (eventCategoryMask & event.getCategory().getMask()) != 0) {
 			listener.accept(event);
 		}
 	}

@@ -121,7 +121,7 @@ public class JoystickTest {
 
 		if (joystick.isGameController()) {
 			GameController game_controller = (GameController) joystick;
-			switch (event.getType()) {
+			switch (event.getCategory()) {
 			case AXIS_MOTION:
 				JoystickEvent.AxisMotionEvent axis_motion_event = (JoystickEvent.AxisMotionEvent) event;
 				GameController.Axis axis = game_controller.getAxisMapping(axis_motion_event.getAxis());

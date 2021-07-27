@@ -49,7 +49,7 @@ public class SdlEvent {
 			eventData.get();
 			eventData.get();
 			short value = eventData.getShort();
-			j_ev = new JoystickEvent.AxisMotionEvent(timestamp, which, axis, value);
+			j_ev = new JoystickEvent.AxisMotionEvent(timestamp, which, type, axis, value);
 			break;
 		case 0x601: // SDL_JOYBALLMOTION
 			int ball = eventData.get() & 0xff;
@@ -58,7 +58,7 @@ public class SdlEvent {
 			eventData.get();
 			short xrel = eventData.getShort();
 			short yrel = eventData.getShort();
-			j_ev = new JoystickEvent.BallMotionEvent(timestamp, which, ball, xrel, yrel);
+			j_ev = new JoystickEvent.BallMotionEvent(timestamp, which, type, ball, xrel, yrel);
 			break;
 		case 0x602: // SDL_JOYHATMOTION
 			int hat = eventData.get() & 0xff;
@@ -68,7 +68,7 @@ public class SdlEvent {
 			 * SDL_HAT_LEFTUP, SDL_HAT_UP, SDL_HAT_RIGHTUP, SDL_HAT_LEFT, SDL_HAT_CENTERED, SDL_HAT_RIGHT,
 			 * SDL_HAT_LEFTDOWN, SDL_HAT_DOWN, SDL_HAT_RIGHTDOWN
 			 */
-			j_ev = new JoystickEvent.HatMotionEvent(timestamp, which, hat, hat_value);
+			j_ev = new JoystickEvent.HatMotionEvent(timestamp, which, type, hat, hat_value);
 			break;
 		case 0x603: // SDL_JOYBUTTONDOWN
 		case 0x604: // SDL_JOYBUTTONUP
@@ -76,7 +76,7 @@ public class SdlEvent {
 		case 0x652: // SDL_CONTROLLERBUTTONUP
 			int button = eventData.get() & 0xff;
 			boolean pressed = (eventData.get() & 0xff) == SDL_PRESSED;
-			j_ev = new JoystickEvent.ButtonEvent(timestamp, which, button, pressed);
+			j_ev = new JoystickEvent.ButtonEvent(timestamp, which, type, button, pressed);
 			break;
 		case 0x605: // SDL_JOYDEVICEADDED
 		case 0x606: // SDL_JOYDEVICEREMOVED
@@ -100,7 +100,7 @@ public class SdlEvent {
 			float f1 = eventData.getFloat();
 			float f2 = eventData.getFloat();
 			float f3 = eventData.getFloat();
-			j_ev = new JoystickEvent.SensorUpdateEvent(timestamp, which, sensor, f1, f2, f3);
+			j_ev = new JoystickEvent.SensorUpdateEvent(timestamp, which, type, sensor, f1, f2, f3);
 			break;
 		default:
 			System.out.println("Unknown JoystickEvent " + type);

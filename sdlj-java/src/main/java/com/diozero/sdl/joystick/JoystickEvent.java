@@ -1,12 +1,12 @@
 package com.diozero.sdl.joystick;
 
 public abstract class JoystickEvent {
-	public enum Type {
+	public enum Category {
 		DEVICE(0), AXIS_MOTION(1), BALL_MOTION(2), BUTTON_PRESS(3), HAT_MOTION(4), TOUCH_PAD(5), SENSOR(6), UNKNOWN(7);
 
 		private int mask;
 
-		Type(int index) {
+		Category(int index) {
 			this.mask = 1 << index;
 		}
 
@@ -15,18 +15,20 @@ public abstract class JoystickEvent {
 		}
 	}
 
-	private Type type;
+	private Category category;
 	private int timestamp;
 	private int joystickId;
+	private int sdlEventType;
 
-	public JoystickEvent(Type type, int timestamp, int joystickId) {
-		this.type = type;
+	public JoystickEvent(Category category, int timestamp, int joystickId, int sdlEventType) {
+		this.category = category;
 		this.timestamp = timestamp;
 		this.joystickId = joystickId;
+		this.sdlEventType = sdlEventType;
 	}
 
-	public Type getType() {
-		return type;
+	public Category getCategory() {
+		return category;
 	}
 
 	public int getTimestamp() {
@@ -37,31 +39,35 @@ public abstract class JoystickEvent {
 		return joystickId;
 	}
 
+	public int getSdlEventType() {
+		return sdlEventType;
+	}
+
 	public static class DeviceEvent extends JoystickEvent {
-		private EventType eventType;
+		private Type type;
 
-		public DeviceEvent(int timestamp, int joystickId, int eventType) {
-			super(Type.DEVICE, timestamp, joystickId);
+		public DeviceEvent(int timestamp, int joystickId, int sdlEventType) {
+			super(Category.DEVICE, timestamp, joystickId, sdlEventType);
 
-			this.eventType = EventType.valueOf(eventType);
+			this.type = Type.valueOf(sdlEventType);
 		}
 
-		public EventType getEventType() {
-			return eventType;
+		public Type getType() {
+			return type;
 		}
 
 		@Override
 		public String toString() {
-			return "DeviceEvent [eventType=" + eventType + ", getType()=" + getType() + ", getTimestamp()="
+			return "DeviceEvent [eventType=" + type + ", getCategory()=" + getCategory() + ", getTimestamp()="
 					+ getTimestamp() + ", getJoystickId()=" + getJoystickId() + "]";
 		}
 
-		private enum EventType {
+		public enum Type {
 			JOYSTICK_ADDED, JOYSTICK_REMOVED, GAME_CONTROLLER_ADDED, GAME_CONTROLLER_REMOVED, GAME_CONTROLLER_REMAPPED,
 			UNKNOWN;
 
-			static EventType valueOf(int eventType) {
-				switch (eventType) {
+			static Type valueOf(int sdlEventType) {
+				switch (sdlEventType) {
 				case 0x605:
 					return JOYSTICK_ADDED;
 				case 0x606:
@@ -83,8 +89,8 @@ public abstract class JoystickEvent {
 		private int button;
 		private boolean pressed;
 
-		public ButtonEvent(int timestamp, int joystickId, int button, boolean pressed) {
-			super(Type.BUTTON_PRESS, timestamp, joystickId);
+		public ButtonEvent(int timestamp, int joystickId, int sdlEventType, int button, boolean pressed) {
+			super(Category.BUTTON_PRESS, timestamp, joystickId, sdlEventType);
 			this.button = button;
 			this.pressed = pressed;
 		}
@@ -99,7 +105,7 @@ public abstract class JoystickEvent {
 
 		@Override
 		public String toString() {
-			return "ButtonEvent [button=" + button + ", pressed=" + pressed + ", getType()=" + getType()
+			return "ButtonEvent [button=" + button + ", pressed=" + pressed + ", getCategory()=" + getCategory()
 					+ ", getTimestamp()=" + getTimestamp() + ", getJoystickId()=" + getJoystickId() + "]";
 		}
 	}
@@ -111,8 +117,8 @@ public abstract class JoystickEvent {
 		private int axis;
 		private float value;
 
-		public AxisMotionEvent(int timestamp, int joystickId, int axis, int value) {
-			super(Type.AXIS_MOTION, timestamp, joystickId);
+		public AxisMotionEvent(int timestamp, int joystickId, int sdlEventType, int axis, int value) {
+			super(Category.AXIS_MOTION, timestamp, joystickId, sdlEventType);
 			this.axis = axis;
 			// Scale to -1..1
 			this.value = value / AXIS_RANGE;
@@ -133,7 +139,7 @@ public abstract class JoystickEvent {
 
 		@Override
 		public String toString() {
-			return "AxisMotionEvent [axis=" + axis + ", value=" + value + ", getType()=" + getType()
+			return "AxisMotionEvent [axis=" + axis + ", value=" + value + ", getCategory()=" + getCategory()
 					+ ", getTimestamp()=" + getTimestamp() + ", getJoystickId()=" + getJoystickId() + "]";
 		}
 	}
@@ -145,12 +151,12 @@ public abstract class JoystickEvent {
 		private static final int DOWN = 0x04;
 		private static final int LEFT = 0x08;
 
-		public enum HatMotionType {
+		public enum Type {
 			SDL_HAT_LEFTUP, SDL_HAT_UP, SDL_HAT_RIGHTUP, SDL_HAT_LEFT, SDL_HAT_CENTERED, SDL_HAT_RIGHT,
 			SDL_HAT_LEFTDOWN, SDL_HAT_DOWN, SDL_HAT_RIGHTDOWN;
 
-			public static HatMotionType valueOf(int value) {
-				HatMotionType type;
+			public static Type valueOf(int value) {
+				Type type;
 				switch (value) {
 				case UP:
 					type = SDL_HAT_UP;
@@ -188,26 +194,26 @@ public abstract class JoystickEvent {
 		}
 
 		private int hat;
-		private HatMotionType value;
+		private Type type;
 
-		public HatMotionEvent(int timestamp, int joystickId, int hat, int value) {
-			super(Type.HAT_MOTION, timestamp, joystickId);
+		public HatMotionEvent(int timestamp, int joystickId, int sdlEventType, int hat, int value) {
+			super(Category.HAT_MOTION, timestamp, joystickId, sdlEventType);
 			this.hat = hat;
-			this.value = HatMotionType.valueOf(value);
+			this.type = Type.valueOf(value);
 		}
 
 		public int getHat() {
 			return hat;
 		}
 
-		public HatMotionType getValue() {
-			return value;
+		public Type getType() {
+			return type;
 		}
 
 		@Override
 		public String toString() {
-			return "HatMotionEvent [hat=" + hat + ", value=" + value + ", getType()=" + getType() + ", getTimestamp()="
-					+ getTimestamp() + ", getJoystickId()=" + getJoystickId() + "]";
+			return "HatMotionEvent [hat=" + hat + ", type=" + type + ", getCategory()=" + getCategory()
+					+ ", getTimestamp()=" + getTimestamp() + ", getJoystickId()=" + getJoystickId() + "]";
 		}
 	}
 
@@ -215,8 +221,8 @@ public abstract class JoystickEvent {
 		private int ball;
 		private Ball ballValue;
 
-		public BallMotionEvent(int timestamp, int joystickId, int ball, int dx, int dy) {
-			super(Type.BALL_MOTION, timestamp, joystickId);
+		public BallMotionEvent(int timestamp, int joystickId, int sdlEventType, int ball, int dx, int dy) {
+			super(Category.BALL_MOTION, timestamp, joystickId, sdlEventType);
 			this.ball = ball;
 			this.ballValue = new Ball(dx, dy);
 		}
@@ -231,24 +237,24 @@ public abstract class JoystickEvent {
 
 		@Override
 		public String toString() {
-			return "BallMotionEvent [ball=" + ball + ", ballValue=" + ballValue + ", getType()=" + getType()
+			return "BallMotionEvent [ball=" + ball + ", ballValue=" + ballValue + ", getCategory()=" + getCategory()
 					+ ", getTimestamp()=" + getTimestamp() + ", getJoystickId()=" + getJoystickId() + "]";
 		}
 	}
 
 	public static class TouchPadEvent extends JoystickEvent {
-		private EventType eventType;
+		private Type type;
 		private int touchPad;
 		private int finger;
 		private float x;
 		private float y;
 		private float pressure;
 
-		public TouchPadEvent(int timestamp, int joystickId, int eventType, int touchPad, int finger, float x, float y,
-				float pressure) {
-			super(Type.TOUCH_PAD, timestamp, joystickId);
+		public TouchPadEvent(int timestamp, int joystickId, int sdlEventType, int touchPad, int finger, float x,
+				float y, float pressure) {
+			super(Category.TOUCH_PAD, timestamp, joystickId, sdlEventType);
 
-			this.eventType = EventType.valueOf(eventType);
+			this.type = Type.valueOf(sdlEventType);
 			this.touchPad = touchPad;
 			this.finger = finger;
 			this.x = x;
@@ -278,15 +284,15 @@ public abstract class JoystickEvent {
 
 		@Override
 		public String toString() {
-			return "TouchPadEvent [eventType=" + eventType + ", touchPad=" + touchPad + ", finger=" + finger + ", x="
-					+ x + ", y=" + y + ", pressure=" + pressure + ", getType()=" + getType() + ", getTimestamp()="
+			return "TouchPadEvent [type=" + type + ", touchPad=" + touchPad + ", finger=" + finger + ", x=" + x + ", y="
+					+ y + ", pressure=" + pressure + ", getCategory()=" + getCategory() + ", getTimestamp()="
 					+ getTimestamp() + ", getJoystickId()=" + getJoystickId() + "]";
 		}
 
-		public enum EventType {
+		public enum Type {
 			DOWN, MOTION, UP, UNKNOWN;
 
-			static EventType valueOf(int eventType) {
+			static Type valueOf(int eventType) {
 				switch (eventType) {
 				case 0x656:
 					return DOWN;
@@ -307,8 +313,9 @@ public abstract class JoystickEvent {
 		private float f2;
 		private float f3;
 
-		public SensorUpdateEvent(int timestamp, int joystickId, int sensor, float f1, float f2, float f3) {
-			super(Type.SENSOR, timestamp, joystickId);
+		public SensorUpdateEvent(int timestamp, int joystickId, int sdlEventType, int sensor, float f1, float f2,
+				float f3) {
+			super(Category.SENSOR, timestamp, joystickId, sdlEventType);
 
 			this.sensor = sensor;
 			this.f1 = f1;
@@ -334,8 +341,9 @@ public abstract class JoystickEvent {
 
 		@Override
 		public String toString() {
-			return "SensorUpdateEvent [sensor=" + sensor + ", f1=" + f1 + ", f2=" + f2 + ", f3=" + f3 + ", getType()="
-					+ getType() + ", getTimestamp()=" + getTimestamp() + ", getJoystickId()=" + getJoystickId() + "]";
+			return "SensorUpdateEvent [sensor=" + sensor + ", f1=" + f1 + ", f2=" + f2 + ", f3=" + f3
+					+ ", getCategory()=" + getCategory() + ", getTimestamp()=" + getTimestamp() + ", getJoystickId()="
+					+ getJoystickId() + "]";
 		}
 	}
 }
