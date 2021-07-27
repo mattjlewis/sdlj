@@ -12,7 +12,13 @@ STRIP_FLAGS  :=
 
 LIB_NAME := sdljoystick
 SRCS     := com_diozero_sdl_joystick_JoystickNative.c
-LDLIBS   := -Wl,-Bstatic -lSDL2 -Wl,-Bdynamic -lpthread
+LDLIBS   := -lpthread
+
+ifeq ($(SDL2_LINK), static)
+    LDLIBS += -Wl,-Bstatic -lSDL2 -Wl,-Bdynamic
+else
+    LDLIBS += -lSDL2
+endif
 
 ifeq ($(OS),Windows_NT)
     uname_S := Windows
