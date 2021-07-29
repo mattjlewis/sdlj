@@ -3,7 +3,9 @@ package com.diozero.sdl.joystick;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class SdlEvent {
+import org.tinylog.Logger;
+
+public class SdlEvent implements SdlEventTypes {
 	private static final int SDL_RELEASED = 0;
 	private static final int SDL_PRESSED = 1;
 
@@ -28,12 +30,12 @@ public class SdlEvent {
 		return type;
 	}
 
-	public boolean isJoystickEvent() {
-		return type > 0x600 && type < 0x700;
+	public boolean isJoystickOrGameControllerEvent() {
+		return type >= SDL_JOYSTICK_EVENT_START && type < SDL_GAMECONTROLLER_EVENT_END;
 	}
 
-	public JoystickEvent toJoystickEvent() {
-		if (type < 0x600 || type >= 0x700) {
+	public JoystickEvent toJoystickOrGameControllerEvent() {
+		if (type < SDL_JOYSTICK_EVENT_START || type >= SDL_GAMECONTROLLER_EVENT_END) {
 			return null;
 		}
 
@@ -42,8 +44,8 @@ public class SdlEvent {
 		int which = eventData.getInt();
 
 		switch (type) {
-		case 0x600: // SDL_JOYAXISMOTION
-		case 0x650: // SDL_CONTROLLERAXISMOTION
+		case SDL_JOYAXISMOTION:
+		case SDL_CONTROLLERAXISMOTION:
 			int axis = eventData.get() & 0xff;
 			eventData.get();
 			eventData.get();
@@ -51,7 +53,7 @@ public class SdlEvent {
 			short value = eventData.getShort();
 			j_ev = new JoystickEvent.AxisMotionEvent(timestamp, which, type, axis, value);
 			break;
-		case 0x601: // SDL_JOYBALLMOTION
+		case SDL_JOYBALLMOTION:
 			int ball = eventData.get() & 0xff;
 			eventData.get();
 			eventData.get();
@@ -60,7 +62,7 @@ public class SdlEvent {
 			short yrel = eventData.getShort();
 			j_ev = new JoystickEvent.BallMotionEvent(timestamp, which, type, ball, xrel, yrel);
 			break;
-		case 0x602: // SDL_JOYHATMOTION
+		case SDL_JOYHATMOTION:
 			int hat = eventData.get() & 0xff;
 			int hat_value = eventData.get() & 0xff;
 			/*-
@@ -70,24 +72,24 @@ public class SdlEvent {
 			 */
 			j_ev = new JoystickEvent.HatMotionEvent(timestamp, which, type, hat, hat_value);
 			break;
-		case 0x603: // SDL_JOYBUTTONDOWN
-		case 0x604: // SDL_JOYBUTTONUP
-		case 0x651: // SDL_CONTROLLERBUTTONDOWN
-		case 0x652: // SDL_CONTROLLERBUTTONUP
+		case SDL_JOYBUTTONDOWN:
+		case SDL_JOYBUTTONUP:
+		case SDL_CONTROLLERBUTTONDOWN:
+		case SDL_CONTROLLERBUTTONUP:
 			int button = eventData.get() & 0xff;
 			boolean pressed = (eventData.get() & 0xff) == SDL_PRESSED;
 			j_ev = new JoystickEvent.ButtonEvent(timestamp, which, type, button, pressed);
 			break;
-		case 0x605: // SDL_JOYDEVICEADDED
-		case 0x606: // SDL_JOYDEVICEREMOVED
-		case 0x653: // SDL_CONTROLLERDEVICEADDED
-		case 0x654: // SDL_CONTROLLERDEVICEREMOVED
-		case 0x655: // SDL_CONTROLLERDEVICEREMAPPED
+		case SDL_JOYDEVICEADDED:
+		case SDL_JOYDEVICEREMOVED:
+		case SDL_CONTROLLERDEVICEADDED:
+		case SDL_CONTROLLERDEVICEREMOVED:
+		case SDL_CONTROLLERDEVICEREMAPPED:
 			j_ev = new JoystickEvent.DeviceEvent(timestamp, which, type);
 			break;
-		case 0x656: // SDL_CONTROLLERTOUCHPADDOWN
-		case 0x657: // SDL_CONTROLLERTOUCHPADMOTION
-		case 0x658: // SDL_CONTROLLERTOUCHPADUP
+		case SDL_CONTROLLERTOUCHPADDOWN:
+		case SDL_CONTROLLERTOUCHPADMOTION:
+		case SDL_CONTROLLERTOUCHPADUP:
 			int touchpad = eventData.get();
 			int finger = eventData.get();
 			float x = eventData.getFloat();
@@ -95,7 +97,7 @@ public class SdlEvent {
 			float pressure = eventData.getFloat();
 			j_ev = new JoystickEvent.TouchPadEvent(timestamp, which, type, touchpad, finger, x, y, pressure);
 			break;
-		case 0x659: // SDL_CONTROLLERSENSORUPDATE
+		case SDL_CONTROLLERSENSORUPDATE:
 			int sensor = eventData.getInt();
 			float f1 = eventData.getFloat();
 			float f2 = eventData.getFloat();
@@ -103,7 +105,7 @@ public class SdlEvent {
 			j_ev = new JoystickEvent.SensorUpdateEvent(timestamp, which, type, sensor, f1, f2, f3);
 			break;
 		default:
-			System.out.println("Unknown JoystickEvent " + type);
+			Logger.warn("Unknown JoystickEvent {}", Integer.valueOf(type));
 			j_ev = null;
 		}
 

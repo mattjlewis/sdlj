@@ -34,4 +34,5 @@ JNIEXPORT void JNICALL Java_com_diozero_sdl_joystick_JoystickNative_closeJoystic
 
 JNIEXPORT jobject JNICALL Java_com_diozero_sdl_joystick_JoystickNative_openGameController(JNIEnv*, jclass, jint);
 JNIEXPORT jboolean JNICALL Java_com_diozero_sdl_joystick_JoystickNative_isGameControllerAttached(JNIEnv*, jclass, jlong);
+JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_getGameControllerBindForAxis(JNIEnv*, jclass, jlong, jint);
 JNIEXPORT void JNICALL Java_com_diozero_sdl_joystick_JoystickNative_closeGameController(JNIEnv*, jclass, jlong);

@@ -59,7 +59,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* jvm, void* reserved) {
 		return JNI_ERR;
 	}
 	method_name = "<init>";
-	signature = "(ILjava/lang/String;IZIJZIIII)V";
+	signature = "(ILjava/lang/String;IZI[BJZIIII)V";
 	joystickConstructor = (*env)->GetMethodID(env, joystick_class, method_name, signature);
 	if ((*env)->ExceptionCheck(env) || joystickConstructor == NULL) {
 		fprintf(stderr, "Error looking up methodID for %s.%s%s\n", class_name, method_name, signature);
@@ -73,7 +73,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* jvm, void* reserved) {
 		return JNI_ERR;
 	}
 	method_name = "<init>";
-	signature = "(ILjava/lang/String;IJZIIIIJLjava/lang/String;Ljava/lang/String;)V";
+	signature = "(ILjava/lang/String;I[BJZIIIIJLjava/lang/String;Ljava/lang/String;I)V";
 	gameControllerConstructor = (*env)->GetMethodID(env, game_controller_class, method_name, signature);
 	if ((*env)->ExceptionCheck(env) || gameControllerConstructor == NULL) {
 		fprintf(stderr, "Error looking up methodID for %s.%s%s\n", class_name, method_name, signature);
@@ -285,11 +285,15 @@ JNIEXPORT jobject JNICALL Java_com_diozero_sdl_joystick_JoystickNative_openJoyst
 		return NULL;
 	}
 
+	SDL_JoystickGUID guid = SDL_JoystickGetGUID(joystick);
+	jbyteArray byte_array = (*env)->NewByteArray(env, 16);
+	(*env)->SetByteArrayRegion(env, byte_array, 0, 16, (const jbyte *) guid.data);
+
 	return (*env)->NewObject(env, joystickClassRef, joystickConstructor,
 			deviceIndex, (*env)->NewStringUTF(env, SDL_JoystickName(joystick)),
 			SDL_JoystickGetType(joystick),
 			SDL_IsGameController(deviceIndex) == SDL_TRUE ? JNI_TRUE : JNI_FALSE,
-			SDL_JoystickInstanceID(joystick),
+			SDL_JoystickInstanceID(joystick), byte_array,
 			(jlong) (long_t) joystick,
 			SDL_JoystickIsHaptic(joystick) == SDL_TRUE ? JNI_TRUE : JNI_FALSE,
 			SDL_JoystickNumAxes(joystick), SDL_JoystickNumBalls(joystick),
@@ -454,17 +458,22 @@ JNIEXPORT jobject JNICALL Java_com_diozero_sdl_joystick_JoystickNative_openGameC
 		printf("Not a haptic device\n");
 	}
 
+	SDL_JoystickGUID guid = SDL_JoystickGetGUID(joystick);
+	jbyteArray byte_array = (*env)->NewByteArray(env, 16);
+	(*env)->SetByteArrayRegion(env, byte_array, 0, 16, (const jbyte *) guid.data);
+
 	jobject obj = (*env)->NewObject(env, gameControllerClassRef, gameControllerConstructor,
 			deviceIndex,
 			(*env)->NewStringUTF(env, SDL_JoystickName(joystick)),
-			SDL_JoystickInstanceID(joystick),
+			SDL_JoystickInstanceID(joystick), byte_array,
 			(jlong) (long_t) joystick,
 			SDL_JoystickIsHaptic(joystick) == SDL_TRUE ? JNI_TRUE : JNI_FALSE,
 			SDL_JoystickNumAxes(joystick), SDL_JoystickNumBalls(joystick),
 			SDL_JoystickNumButtons(joystick), SDL_JoystickNumHats(joystick),
 			(jlong) (long_t) game_controller,
 			(*env)->NewStringUTF(env, SDL_GameControllerName(game_controller)),
-			(*env)->NewStringUTF(env, gc_mapping));
+			(*env)->NewStringUTF(env, gc_mapping),
+			SDL_GameControllerGetType(game_controller));
 
 	SDL_free(gc_mapping);
 
@@ -474,6 +483,12 @@ JNIEXPORT jobject JNICALL Java_com_diozero_sdl_joystick_JoystickNative_openGameC
 JNIEXPORT jboolean JNICALL Java_com_diozero_sdl_joystick_JoystickNative_isGameControllerAttached(
 		JNIEnv* env, jclass clz, jlong gameControllerPointer) {
 	return SDL_GameControllerGetAttached((SDL_GameController*) (long_t) gameControllerPointer);
+}
+
+JNIEXPORT jint JNICALL Java_com_diozero_sdl_joystick_JoystickNative_getGameControllerBindForAxis(
+		JNIEnv* env, jclass clz, jlong gameControllerPointer, jint axis) {
+	// FIXME Check the bindType (SDL_CONTROLLER_BINDTYE_NONE / BUTTON / AXIS / HAT)
+	return SDL_GameControllerGetBindForAxis((SDL_GameController*) (long_t) gameControllerPointer, axis).value.axis;
 }
 
 JNIEXPORT void JNICALL Java_com_diozero_sdl_joystick_JoystickNative_closeGameController(

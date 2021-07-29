@@ -1,10 +1,5 @@
 package com.diozero.sdl.joystick;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +10,6 @@ import org.tinylog.Logger;
 
 @SuppressWarnings("resource")
 public class JoystickNative {
-	private static final int SDL_QUIT = 0x100;
 	private static final String LIB_NAME = "sdljoystick";
 	private static AtomicBoolean loaded = new AtomicBoolean();
 	private static Map<Integer, Joystick> joysticks;
@@ -41,6 +35,7 @@ public class JoystickNative {
 			// Also set as SDL_GAMECONTROLLERCONFIG
 			// https://github.com/gabomdq/SDL_GameControllerDB (v2.0.10 and later)
 			// FIXME Unpack the version string...
+			/*-
 			if (!linkedVersion.equals("2.0.9")) {
 				try (InputStream is = JoystickNative.class.getResourceAsStream("/gamecontrollerdb.txt")) {
 					if (is != null) {
@@ -56,6 +51,7 @@ public class JoystickNative {
 					Logger.warn(e, "Can't load game controller db file: {}", e);
 				}
 			}
+			*/
 
 			joysticks = new ConcurrentHashMap<>();
 
@@ -121,6 +117,8 @@ public class JoystickNative {
 
 	static native boolean isGameControllerAttached(long gameControllerPointer);
 
+	static native int getGameControllerBindForAxis(long gameControllerPointer, int axis);
+
 	static native void closeGameController(long gameControllerPointer);
 
 	static void shutdown() {
@@ -183,17 +181,21 @@ public class JoystickNative {
 		eventLoopRunning.set(true);
 		while (eventLoopRunning.get()) {
 			SdlEvent event = waitForEvent();
-			if (event == null || event.getType() == SDL_QUIT) {
+			if (event == null || event.getType() == SdlEventTypes.SDL_QUIT) {
 				Logger.warn("Got a null / quit event");
 				eventLoopRunning.set(false);
 			} else {
-				if (event.isJoystickEvent()) {
-					JoystickEvent j_ev = event.toJoystickEvent();
-					Joystick joystick = joysticks.get(Integer.valueOf(j_ev.getJoystickId()));
-					if (joystick == null) {
-						Logger.error("Couldn't find joystick for id {}", Integer.valueOf(j_ev.getJoystickId()));
+				if (event.isJoystickOrGameControllerEvent()) {
+					JoystickEvent j_ev = event.toJoystickOrGameControllerEvent();
+					if (j_ev.getCategory() == JoystickEvent.Category.DEVICE) {
+						Joystick.newDeviceEvent((JoystickEvent.DeviceEvent) j_ev);
 					} else {
-						joystick.newEvent(j_ev);
+						Joystick joystick = joysticks.get(Integer.valueOf(j_ev.getJoystickId()));
+						if (joystick == null) {
+							Logger.error("Couldn't find joystick for id {}", Integer.valueOf(j_ev.getJoystickId()));
+						} else {
+							joystick.newEvent(j_ev);
+						}
 					}
 				}
 			}

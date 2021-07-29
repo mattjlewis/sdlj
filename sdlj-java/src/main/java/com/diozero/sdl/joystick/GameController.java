@@ -11,15 +11,17 @@ public class GameController extends Joystick {
 	private String gameControllerName;
 	private Map<Integer, Button> buttonMappings;
 	private Map<Integer, Axis> axisMappings;
+	private Type type;
 
-	public GameController(int id, String name, int instanceId, long joystickPointer, boolean haptic, int numAxes,
-			int numBalls, int numButtons, int numHats, long gameControllerPointer, String gameControllerName,
-			String mapping) {
-		super(id, name, 1, true, instanceId, joystickPointer, haptic, numAxes, numBalls, numButtons, numHats);
+	public GameController(int id, String name, int instanceId, byte[] guid, long joystickPointer, boolean haptic,
+			int numAxes, int numBalls, int numButtons, int numHats, long gameControllerPointer,
+			String gameControllerName, String mapping, int type) {
+		super(id, name, 1, true, instanceId, guid, joystickPointer, haptic, numAxes, numBalls, numButtons, numHats);
 
 		this.gameControllerPointer = gameControllerPointer;
 		this.gameControllerName = gameControllerName;
 		unpackMapping(mapping);
+		this.type = Type.valueOf(type);
 	}
 
 	public long getGameControllerPointer() {
@@ -30,20 +32,66 @@ public class GameController extends Joystick {
 		return gameControllerName;
 	}
 
-	public Map<Integer, Button> getButtonMappings() {
+	/**
+	 * Get the mappings from joystick button ids (as returned by a Joystick
+	 * ButtonEvent) to Button enum value. Do not use this if
+	 * ButtonEvent.isGameController() returns true.
+	 *
+	 * @return the mappings from unmapped Joystick button id to GameController
+	 *         Button value
+	 */
+	public Map<Integer, Button> getJoystickButtonMappings() {
 		return buttonMappings;
 	}
 
-	public Button getButtonMapping(int button) {
-		return buttonMappings.get(Integer.valueOf(button));
+	/**
+	 * Convert an unmapped joystick button id to a mapped Button enum. Do not use
+	 * this if ButtonEvent.isGameController() returns true.
+	 *
+	 * @param joystickButton the button id returned from a Joystick Button Event
+	 * @return the mapped GameController Button value or INVALID if not found
+	 */
+	public Button getJoystickButtonMapping(int joystickButton) {
+		Button mapped_button = buttonMappings.get(Integer.valueOf(joystickButton));
+		if (mapped_button == null) {
+			mapped_button = Button.INVALID;
+		}
+		return mapped_button;
 	}
 
-	public Map<Integer, Axis> getAxisMappings() {
+	/**
+	 * Get the mappings from joystick axis ids (as returned by a Joystick
+	 * AxisMotionEvent) to Axis enum value. Do not use this if
+	 * AxisMotionEvent.isGameController() returns true.
+	 *
+	 * @return the mappings from unmapped Joystick axis id to GameController Axis
+	 *         value
+	 */
+	public Map<Integer, Axis> getJoystickAxisMappings() {
 		return axisMappings;
 	}
 
-	public Axis getAxisMapping(int axis) {
-		return axisMappings.get(Integer.valueOf(axis));
+	/**
+	 * Convert an unmapped joystick axis id to a mapped Axis enum. Do not use this
+	 * if AxisMotionEvent.isGameController() returns true.
+	 *
+	 * @param joystickAxis the axis id returned from a Joystick AxisMotion Event
+	 * @return the mapped Axis or INVALID if not found
+	 */
+	public Axis getJoystickAxisMapping(int joystickAxis) {
+		Axis mapped_axis = axisMappings.get(Integer.valueOf(joystickAxis));
+		if (mapped_axis == null) {
+			mapped_axis = Axis.INVALID;
+		}
+		return mapped_axis;
+	}
+
+	public int getBindForAxis(int axis) {
+		return JoystickNative.getGameControllerBindForAxis(gameControllerPointer, axis);
+	}
+
+	public Type getGameControllerType() {
+		return type;
 	}
 
 	@Override
@@ -96,12 +144,47 @@ public class GameController extends Joystick {
 		axisMappings = Collections.unmodifiableMap(axis_mappings);
 	}
 
+	public enum Type {
+		// Note starts at 0
+		UNKNOWN, XBOX360, XBOXONE, PS3, PS4, NINTENDO_SWITCH_PRO, VIRTUAL, PS5, AMAZON_LUNA, GOOGLE_STADIA;
+
+		public static Type valueOf(int sdlType) {
+			if (sdlType < 0 || sdlType >= values().length) {
+				return UNKNOWN;
+			}
+
+			return values()[sdlType];
+		}
+	}
+
 	public enum Button {
+		// Note starts at -1
 		INVALID, A, B, X, Y, BACK, GUIDE, START, LEFTSTICK, RIGHTSTICK, LEFTSHOULDER, RIGHTSHOULDER, LEFTTRIGGER,
 		RIGHTTRIGGER, DPUP, DPDOWN, DPLEFT, DPRIGHT, MISC1, PADDLE1, PADDLE2, PADDLE3, PADDLE4, TOUCHPAD, MAX;
+
+		public static Button valueOf(int sdlValue) {
+			// Note starts at -1
+			int ordinal = sdlValue + 1;
+			if (ordinal < 0 || ordinal >= values().length) {
+				return INVALID;
+			}
+
+			return values()[ordinal];
+		}
 	}
 
 	public enum Axis {
+		// Note starts at -1
 		INVALID, LEFTX, LEFTY, RIGHTX, RIGHTY, LEFTTRIGGER, RIGHTTRIGGER, MAX;
+
+		public static Axis valueOf(int sdlValue) {
+			// Note starts at -1
+			int ordinal = sdlValue + 1;
+			if (ordinal < 0 || ordinal >= values().length) {
+				return INVALID;
+			}
+
+			return values()[ordinal];
+		}
 	}
 }

@@ -72,8 +72,8 @@ public class JoystickTest {
 						GameController game_controller = (GameController) joystick;
 
 						Logger.info("GameController ({}) - button mappings: {}, axis mappings: {}",
-								game_controller.getGameControllerName(), game_controller.getButtonMappings(),
-								game_controller.getAxisMappings());
+								game_controller.getGameControllerName(), game_controller.getJoystickButtonMappings(),
+								game_controller.getJoystickAxisMappings());
 					}
 
 					Logger.info("Trying low frequency rumble...");
@@ -111,54 +111,63 @@ public class JoystickTest {
 	}
 
 	static void testEvents(Joystick joystick) {
-		joystick.setListener(event -> processEvent(joystick, event));
+		Joystick.addDeviceListener(event -> processDeviceEvent(event));
+		joystick.setButtonListener(event -> processButtonEvent(joystick, event));
+		joystick.setAxisMotionListener(event -> processAxisMotionEvent(joystick, event));
 		Logger.info("Processing events...");
 		JoystickNative.processEvents();
 	}
 
-	static void processEvent(Joystick joystick, JoystickEvent event) {
+	static void processDeviceEvent(JoystickEvent.DeviceEvent event) {
+		System.out.println(event);
+	}
+
+	static void processButtonEvent(Joystick joystick, JoystickEvent.ButtonEvent event) {
 		System.out.println(event);
 
+		GameController game_controller = null;
 		if (joystick.isGameController()) {
-			GameController game_controller = (GameController) joystick;
-			switch (event.getCategory()) {
-			case AXIS_MOTION:
-				JoystickEvent.AxisMotionEvent axis_motion_event = (JoystickEvent.AxisMotionEvent) event;
-				GameController.Axis axis = game_controller.getAxisMapping(axis_motion_event.getAxis());
-				System.out.println("Axis: " + axis + ", Value: " + joystick.getAxisValue(axis_motion_event.getAxis()));
-				if (axis == GameController.Axis.RIGHTTRIGGER
-						&& ((System.currentTimeMillis() - rightRumbleStart) > RUMBLE_DURATION)
-						|| rightRumbleStart == 0) {
-					// Event value is -1 .. 1
-					// Axis.getValue is -32768..32767
-					// Rumble is Uint16 so 0..65535
-					rightRumbleStart = System.currentTimeMillis();
-					rightRumble = (int) ((axis_motion_event.getValue() + 1) * 32768);
-					Logger.info("Setting rumble to {}", Integer.valueOf(rightRumble));
-					game_controller.rumble(leftRumble, rightRumble, RUMBLE_DURATION);
-				} else if (axis == GameController.Axis.LEFTTRIGGER
-						&& ((System.currentTimeMillis() - leftRumbleStart) > RUMBLE_DURATION) || leftRumbleStart == 0) {
-					// Event value is -1 .. 1
-					// Axis.getValue is -32768..32767
-					// Rumble is Uint16 so 0..65535
-					leftRumbleStart = System.currentTimeMillis();
-					leftRumble = (int) ((axis_motion_event.getValue() + 1) * 32768);
-					Logger.info("Setting rumble to {}", Integer.valueOf(leftRumble));
-					game_controller.rumble(leftRumble, rightRumble, RUMBLE_DURATION);
-				}
+			game_controller = (GameController) joystick;
 
-				break;
-			case BUTTON_PRESS:
-				GameController.Button button = game_controller
-						.getButtonMapping(((JoystickEvent.ButtonEvent) event).getButton());
-				System.out.println("Button: " + button);
-				if (button == GameController.Button.X) {
-					Logger.info("Setting rumble to {}", Integer.valueOf(0));
-					game_controller.rumble(0, 0, RUMBLE_DURATION);
-				}
-				break;
-			default:
-				// Ignore
+			GameController.Button button = event.getButton(game_controller);
+			System.out.println("Button: " + button);
+			if (button == GameController.Button.X) {
+				Logger.info("Setting rumble to {}", Integer.valueOf(0));
+				game_controller.rumble(0, 0, RUMBLE_DURATION);
+			}
+		} else {
+			System.out.println("Joystick button event: " + event);
+		}
+	}
+
+	static void processAxisMotionEvent(Joystick joystick, JoystickEvent.AxisMotionEvent event) {
+		System.out.println(event);
+
+		GameController game_controller = null;
+		if (joystick.isGameController()) {
+			game_controller = (GameController) joystick;
+
+			JoystickEvent.AxisMotionEvent axis_motion_event = event;
+			GameController.Axis axis = event.getAxis(game_controller);
+			System.out.println("Axis: " + axis + ", Value: " + joystick.getAxisValue(axis_motion_event.getAxis()));
+			if (axis == GameController.Axis.RIGHTTRIGGER
+					&& ((System.currentTimeMillis() - rightRumbleStart) > RUMBLE_DURATION) || rightRumbleStart == 0) {
+				// Event value is -1 .. 1
+				// Axis.getValue is -32768..32767
+				// Rumble is Uint16 so 0..65535
+				rightRumbleStart = System.currentTimeMillis();
+				rightRumble = (int) ((axis_motion_event.getValue() + 1) * 32768);
+				Logger.info("Setting rumble to {}", Integer.valueOf(rightRumble));
+				game_controller.rumble(leftRumble, rightRumble, RUMBLE_DURATION);
+			} else if (axis == GameController.Axis.LEFTTRIGGER
+					&& ((System.currentTimeMillis() - leftRumbleStart) > RUMBLE_DURATION) || leftRumbleStart == 0) {
+				// Event value is -1 .. 1
+				// Axis.getValue is -32768..32767
+				// Rumble is Uint16 so 0..65535
+				leftRumbleStart = System.currentTimeMillis();
+				leftRumble = (int) ((axis_motion_event.getValue() + 1) * 32768);
+				Logger.info("Setting rumble to {}", Integer.valueOf(leftRumble));
+				game_controller.rumble(leftRumble, rightRumble, RUMBLE_DURATION);
 			}
 		}
 	}

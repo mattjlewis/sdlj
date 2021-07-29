@@ -20,10 +20,10 @@ public class JoystickInfo {
 		UNKNOWN, GAMECONTROLLER, WHEEL, ARCADE_STICK, FLIGHT_STICK, DANCE_PAD, GUITAR, DRUM_KIT, ARCADE_PAD, THROTTLE;
 
 		static Type valueOf(int sdlOrdinal) {
-			if (sdlOrdinal <= 0 || sdlOrdinal >= Type.values().length) {
+			if (sdlOrdinal < 0 || sdlOrdinal >= values().length) {
 				return UNKNOWN;
 			}
-			return Type.values()[sdlOrdinal];
+			return values()[sdlOrdinal];
 		}
 	}
 

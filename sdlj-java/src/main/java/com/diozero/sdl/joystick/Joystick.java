@@ -1,5 +1,8 @@
 package com.diozero.sdl.joystick;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.tinylog.Logger;
 
 /*-
@@ -16,22 +19,42 @@ import org.tinylog.Logger;
  *     12      Guide-??       A-0
  */
 public class Joystick extends JoystickInfo implements AutoCloseable {
+	private static List<JoystickDeviceListener> deviceListeners;
+	static {
+		deviceListeners = new ArrayList<>();
+	}
+
+	static void newDeviceEvent(JoystickEvent.DeviceEvent event) {
+		deviceListeners.forEach(listener -> listener.accept(event));
+	}
+
+	public static void addDeviceListener(JoystickDeviceListener consumer) {
+		deviceListeners.add(consumer);
+	}
+
+	public static void removeDeviceEventListener(JoystickDeviceListener consumer) {
+		deviceListeners.remove(consumer);
+	}
+
 	private int instanceId;
+	private byte[] guid;
 	private long joystickPointer;
 	private boolean haptic;
 	private int numAxes;
 	private int numBalls;
 	private int numButtons;
 	private int numHats;
-	private JoystickEventListener listener;
+	private JoystickButtonListener buttonListener;
+	private JoystickAxisMotionListener axisMotionListener;
 	// FIXME Fix event masking - by sub-system?
 	private int eventCategoryMask = 0xffff;
 
-	Joystick(int id, String name, int sdlTypeOrdinal, boolean gameController, int instanceId, long joystickPointer,
-			boolean haptic, int numAxes, int numBalls, int numButtons, int numHats) {
+	Joystick(int id, String name, int sdlTypeOrdinal, boolean gameController, int instanceId, byte[] guid,
+			long joystickPointer, boolean haptic, int numAxes, int numBalls, int numButtons, int numHats) {
 		super(id, name, sdlTypeOrdinal, gameController);
 
 		this.instanceId = instanceId;
+		this.guid = guid;
 		this.joystickPointer = joystickPointer;
 		this.haptic = haptic;
 		this.numAxes = numAxes;
@@ -42,6 +65,10 @@ public class Joystick extends JoystickInfo implements AutoCloseable {
 
 	public int getInstanceId() {
 		return instanceId;
+	}
+
+	public byte[] getGuid() {
+		return guid;
 	}
 
 	public long getJoystickPointer() {
@@ -94,19 +121,34 @@ public class Joystick extends JoystickInfo implements AutoCloseable {
 	}
 	*/
 
-	public void setListener(JoystickEventListener listener) {
-		this.listener = listener;
+	public void setButtonListener(JoystickButtonListener consumer) {
+		this.buttonListener = consumer;
 	}
 
-	public void removeListener() {
-		listener = null;
+	public void removeButtonListener() {
+		buttonListener = null;
+	}
+
+	public void setAxisMotionListener(JoystickAxisMotionListener consumer) {
+		this.axisMotionListener = consumer;
+	}
+
+	public void removeAxisMotionListener() {
+		axisMotionListener = null;
 	}
 
 	void newEvent(JoystickEvent event) {
 		Logger.debug("eventCategoryMask={}, mask hit={}", Integer.valueOf(eventCategoryMask),
 				Integer.valueOf(eventCategoryMask & event.getCategory().getMask()));
-		if (listener != null && (eventCategoryMask & event.getCategory().getMask()) != 0) {
-			listener.accept(event);
+		switch (event.getCategory()) {
+		case BUTTON_PRESS:
+			buttonListener.accept((JoystickEvent.ButtonEvent) event);
+			break;
+		case AXIS_MOTION:
+			axisMotionListener.accept((JoystickEvent.AxisMotionEvent) event);
+			break;
+		default:
+			Logger.warn("Category {} not yet supported in events", event.getCategory());
 		}
 	}
 
